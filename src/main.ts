@@ -135,7 +135,7 @@ async function run(): Promise<void> {
       body: '',
       event: 'COMMENT'
     };
-    if (body.length == 0) {
+    if (body.every(messages => messages.length === 1)) {
       options = {
         ...options,
         body: '',
