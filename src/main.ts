@@ -21,7 +21,7 @@ async function run(): Promise<void> {
     let files: string[] = [];
     if (github.context.payload.pull_request) {
       files = await new FileService(
-        core.getInput('token', {required: true})
+        core.getInput('GITHUB_TOKEN', {required: true})
       ).getFiles();
       console.log(files);
     }

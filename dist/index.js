@@ -145,7 +145,7 @@ function run() {
                 .map(dirent => dirent.name);
             let files = [];
             if (github.context.payload.pull_request) {
-                files = yield new files_1.FileService(core.getInput('token', { required: true })).getFiles();
+                files = yield new files_1.FileService(core.getInput('GITHUB_TOKEN', { required: true })).getFiles();
                 console.log(files);
             }
             // Loop over contracts
