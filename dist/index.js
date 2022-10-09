@@ -150,7 +150,7 @@ function run() {
             }
             // Loop over contracts
             for (const contract of contracts) {
-                const messages = ["**" + contract + "**"];
+                const messages = ['**' + contract + '**'];
                 let error = files.find(file => file.includes(contract));
                 core.info(`Checking ${contract}`);
                 const description_path = (0, path_1.join)('contracts', contract, 'edit_me/description.ext');
@@ -229,7 +229,7 @@ function run() {
                 body: '',
                 event: 'COMMENT'
             };
-            if (body.length == 0) {
+            if (body.every(messages => messages.length === 1)) {
                 options = Object.assign(Object.assign({}, options), { body: '', event: 'APPROVE' });
             }
             else {
