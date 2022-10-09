@@ -6,9 +6,9 @@ import {join} from 'path';
 import {readdir} from 'fs/promises';
 import {FileService} from './files';
 
-const regex_desc_name = /OnLoadName = "(.+?)";/gm;
-const regex_desc_summary = /OnLoadMission = "(.+?)";/gm;
-const regex_desc_author = /author = "(.+?)";/gm;
+const regex_desc_name = /^OnLoadName = "(.+?)";$/m;
+const regex_desc_summary = /^OnLoadMission = "(.+?)";$/m;
+const regex_desc_author = /^author = "(.+?)";$/m;
 
 async function run(): Promise<void> {
   const body = [];
