@@ -28,7 +28,7 @@ async function run(): Promise<void> {
 
     // Loop over contracts
     for (const contract of contracts) {
-      const messages: string[] = [];
+      const messages: string[] = ['**' + contract + '**'];
       let error = files.find(file => file.includes(contract));
       core.info(`Checking ${contract}`);
       const description_path = join(
@@ -110,11 +110,11 @@ async function run(): Promise<void> {
 
       // Mission - Playable Units
       if (!mission.includes('isPlayable=1')) {
-        core.error(`- mission.sqm: No playable units found`);
+        core.error(`${contract} - mission.sqm: No playable units found`);
         error && messages.push(`No playable units found`);
       }
 
-      body.push(messages);
+      error && body.push(messages);
     }
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message);

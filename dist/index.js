@@ -150,7 +150,7 @@ function run() {
             }
             // Loop over contracts
             for (const contract of contracts) {
-                const messages = [];
+                const messages = ["**" + contract + "**"];
                 let error = files.find(file => file.includes(contract));
                 core.info(`Checking ${contract}`);
                 const description_path = (0, path_1.join)('contracts', contract, 'edit_me/description.ext');
@@ -210,10 +210,10 @@ function run() {
                 }
                 // Mission - Playable Units
                 if (!mission.includes('isPlayable=1')) {
-                    core.error(`- mission.sqm: No playable units found`);
+                    core.error(`${contract} - mission.sqm: No playable units found`);
                     error && messages.push(`No playable units found`);
                 }
-                body.push(messages);
+                error && body.push(messages);
             }
         }
         catch (error) {
