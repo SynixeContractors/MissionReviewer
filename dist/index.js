@@ -149,8 +149,11 @@ function run() {
                 core.debug(files.toString());
             }
             for (const file of files) {
-                if (file.endsWith('.pbo')) {
-                    body.push(['**' + file + '**', '[PBOs are not accepted, only mission folders](https://github.com/SynixeContractors/Missions#create-a-new-mission)']);
+                if (file.endsWith('.pbo"')) {
+                    body.push([
+                        '**' + file + '**',
+                        '[PBOs are not accepted, only mission folders](https://github.com/SynixeContractors/Missions#create-a-new-mission)'
+                    ]);
                 }
             }
             // Loop over contracts

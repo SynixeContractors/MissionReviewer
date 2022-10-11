@@ -27,7 +27,7 @@ async function run(): Promise<void> {
     }
 
     for (const file of files) {
-      if (file.endsWith('.pbo')) {
+      if (file.endsWith('.pbo"')) {
         body.push([
           '**' + file + '**',
           '[PBOs are not accepted, only mission folders](https://github.com/SynixeContractors/Missions#create-a-new-mission)'
