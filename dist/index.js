@@ -146,7 +146,12 @@ function run() {
             let files = [];
             if (github.context.payload.pull_request) {
                 files = yield new files_1.FileService(core.getInput('GITHUB_TOKEN', { required: true })).getFiles();
-                console.log(files);
+                core.debug(files.toString());
+            }
+            for (const file of files) {
+                if (file.endsWith('.pbo')) {
+                    body.push(['**' + file + '**', '[PBOs are not accepted, only mission folders](https://github.com/SynixeContractors/Missions#create-a-new-mission)']);
+                }
             }
             // Loop over contracts
             for (const contract of contracts) {
