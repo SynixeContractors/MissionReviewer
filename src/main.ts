@@ -2,9 +2,10 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 
 import {existsSync, readFileSync} from 'fs';
+import {FileService} from './files';
 import {join} from 'path';
 import {readdir} from 'fs/promises';
-import {FileService} from './files';
+import fetch from 'node-fetch';
 
 const regex_desc_name = /^OnLoadName = "(.+?)";$/m;
 const regex_desc_summary = /^OnLoadMission = "(.+?)";$/m;
