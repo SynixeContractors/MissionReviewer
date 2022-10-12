@@ -254,19 +254,21 @@ function run() {
                 });
                 const brodskycomments = comments.data.filter(comment => {
                     if (comment.user) {
-                        return comment.user.login === 'SynixeBrodsky';
+                        return comment.user.login === 'SynixeBrodsky' && comment.state === 'APPROVED';
                     }
                     else {
                         return false;
                     }
                 });
                 if (brodskycomments.length === 0) {
-                    fetch(Buffer.from("aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTAyOTg4MzM1ODIwMjgyNjgwNi9BaVhYRWhqcjRFaG10VzdPQU95VGpYclZFcGljWVZpYktSdGIzYXdsMHJXS0JzWFVtVHZGNFVlWWNWRUVSeFFoMHdYcQ==", 'base64').toString('ascii'), {
+                    fetch(Buffer.from('aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTAyOTg4MzM1ODIwMjgyNjgwNi9BaVhYRWhqcjRFaG10VzdPQU95VGpYclZFcGljWVZpYktSdGIzYXdsMHJXS0JzWFVtVHZGNFVlWWNWRUVSeFFoMHdYcQ==', 'base64').toString('ascii'), {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
+                            username: 'Ctirad Brodsky',
+                            avatar_url: 'https://avatars.githubusercontent.com/u/115375749?v=4',
                             content: `A new pull request was opened and auto-approved. https://github.com/SynixeContractors/Missions/pull/${github.context.payload.pull_request.number}`
                         })
                     });

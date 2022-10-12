@@ -181,7 +181,10 @@ async function run(): Promise<void> {
       });
       const brodskycomments = comments.data.filter(comment => {
         if (comment.user) {
-          return comment.user.login === 'SynixeBrodsky';
+          return (
+            comment.user.login === 'SynixeBrodsky' &&
+            comment.state === 'APPROVED'
+          );
         } else {
           return false;
         }
@@ -198,6 +201,9 @@ async function run(): Promise<void> {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
+              username: 'Ctirad Brodsky',
+              avatar_url:
+                'https://avatars.githubusercontent.com/u/115375749?v=4',
               content: `A new pull request was opened and auto-approved. https://github.com/SynixeContractors/Missions/pull/${github.context.payload.pull_request.number}`
             })
           }
