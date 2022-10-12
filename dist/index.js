@@ -247,6 +247,30 @@ function run() {
             };
             if (body.every(messages => messages.length === 1)) {
                 options = Object.assign(Object.assign({}, options), { body: '', event: 'APPROVE' });
+                const comments = yield octo.rest.pulls.listReviews({
+                    owner: github.context.repo.owner,
+                    repo: github.context.repo.repo,
+                    pull_number: github.context.payload.pull_request.number
+                });
+                const brodskycomments = comments.data.filter(comment => {
+                    if (comment.user) {
+                        return comment.user.login === 'SynixeBrodsky';
+                    }
+                    else {
+                        return false;
+                    }
+                });
+                if (brodskycomments.length === 0) {
+                    fetch(Buffer.from("aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTAyOTg4MzM1ODIwMjgyNjgwNi9BaVhYRWhqcjRFaG10VzdPQU95VGpYclZFcGljWVZpYktSdGIzYXdsMHJXS0JzWFVtVHZGNFVlWWNWRUVSeFFoMHdYcQ==", 'base64').toString('ascii'), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            content: `A new pull request was opened and auto-approved. https://github.com/SynixeContractors/Missions/pull/${github.context.payload.pull_request.number}`
+                        })
+                    });
+                }
             }
             else {
                 options = Object.assign(Object.assign({}, options), { body: body.map(m => m.join('\n')).join('\n'), event: 'REQUEST_CHANGES' });
