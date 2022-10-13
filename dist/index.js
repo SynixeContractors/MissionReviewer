@@ -169,7 +169,6 @@ function run() {
                 if (!(0, fs_1.existsSync)(description_path)) {
                     core.info(`${contract} - Not using template`);
                     error && messages.push('Not using template');
-                    continue;
                 }
                 // Check Description
                 const description = (0, fs_1.readFileSync)(description_path, 'utf8');

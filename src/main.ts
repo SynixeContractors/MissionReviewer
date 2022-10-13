@@ -49,7 +49,6 @@ async function run(): Promise<void> {
       if (!existsSync(description_path)) {
         core.info(`${contract} - Not using template`);
         error && messages.push('Not using template');
-        continue;
       }
 
       // Check Description
