@@ -168,7 +168,8 @@ function run() {
                 const description_path = (0, path_1.join)('contracts', contract, 'edit_me/description.ext');
                 if (!(0, fs_1.existsSync)(description_path)) {
                     core.info(`${contract} - Not using template`);
-                    return;
+                    error && messages.push('Not using template');
+                    continue;
                 }
                 // Check Description
                 const description = (0, fs_1.readFileSync)(description_path, 'utf8');
