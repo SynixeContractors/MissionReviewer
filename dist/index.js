@@ -167,7 +167,7 @@ function run() {
                 core.info(`Checking ${contract}`);
                 const description_path = (0, path_1.join)('contracts', contract, 'edit_me/description.ext');
                 if (!(0, fs_1.existsSync)(description_path)) {
-                    core.info('- Not using template');
+                    core.info(`${contract} - Not using template`);
                     return;
                 }
                 // Check Description
@@ -241,6 +241,7 @@ function run() {
                 core.setFailed(error.message);
         }
         if (github.context.payload.pull_request) {
+            core.debug('Sending comment');
             const octo = github.getOctokit(core.getInput('GITHUB_TOKEN'));
             let options = {
                 owner: github.context.repo.owner,
@@ -283,6 +284,9 @@ function run() {
                 options = Object.assign(Object.assign({}, options), { body: body.map(m => m.join('\n')).join('\n'), event: 'REQUEST_CHANGES' });
             }
             octo.rest.pulls.createReview(options);
+        }
+        else {
+            core.debug('Not a pull request');
         }
     });
 }

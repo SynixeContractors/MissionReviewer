@@ -47,7 +47,7 @@ async function run(): Promise<void> {
         'edit_me/description.ext'
       );
       if (!existsSync(description_path)) {
-        core.info('- Not using template');
+        core.info(`${contract} - Not using template`);
         return;
       }
 
@@ -155,6 +155,7 @@ async function run(): Promise<void> {
   }
 
   if (github.context.payload.pull_request) {
+    core.debug('Sending comment');
     const octo = github.getOctokit(core.getInput('GITHUB_TOKEN'));
     let options: {
       owner: string;
@@ -218,6 +219,8 @@ async function run(): Promise<void> {
       };
     }
     octo.rest.pulls.createReview(options);
+  } else {
+    core.debug('Not a pull request');
   }
 }
 
