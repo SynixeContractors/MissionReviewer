@@ -168,7 +168,7 @@ function run() {
                 const description_path = (0, path_1.join)('contracts', contract, 'edit_me/description.ext');
                 if (!(0, fs_1.existsSync)(description_path)) {
                     core.info(`${contract} - Not using template`);
-                    error && messages.push('Not using template');
+                    error && messages.push('[Not using template](https://github.com/SynixeContractors/MissionTemplate)');
                 }
                 if ((0, fs_1.existsSync)(description_path)) {
                     // Check Description
@@ -199,41 +199,48 @@ function run() {
                 }
                 if ((0, fs_1.existsSync)(mission_path)) {
                     const mission = (0, fs_1.readFileSync)(mission_path, 'utf8');
-                    // Mission - Spectator Screen
-                    if (!mission.includes('type="synixe_spectator_screen"')) {
-                        core.error(`${contract} - mission.sqm: Spectator Screen not found`);
-                        error &&
-                            messages.push(`[Spectator Screen not found](https://github.com/SynixeContractors/MissionTemplate#setup-base)`);
+                    if (mission.startsWith('version')) {
+                        // Mission - Spectator Screen
+                        if (!mission.includes('type="synixe_spectator_screen"')) {
+                            core.error(`${contract} - mission.sqm: Spectator Screen not found`);
+                            error &&
+                                messages.push(`[Spectator Screen not found](https://github.com/SynixeContractors/MissionTemplate#setup-base)`);
+                        }
+                        // Mission - Check Respawn
+                        if (!mission.includes('name="respawn"')) {
+                            core.error(`${contract} - mission.sqm: Respawn not found`);
+                            error &&
+                                messages.push(`[Respawn not found](https://github.com/SynixeContractors/MissionTemplate#setup-base)`);
+                        }
+                        // Mission - Check Shop
+                        if (!mission.includes('property="persistent_gear_shop_arsenal_attribute_shop"')) {
+                            core.error(`${contract} - mission.sqm: Shop not found`);
+                            error &&
+                                messages.push(`[Shop not found](https://github.com/SynixeContractors/MissionTemplate#setup-shops)`);
+                        }
+                        // Mission - Has Contractors
+                        if (!mission.includes('description="Contractor"')) {
+                            core.error(`${contract} - mission.sqm: No "Contractor" units found`);
+                            error &&
+                                messages.push(`[No "Contractor" units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`);
+                        }
+                        // Mission - Uses Synixe Unit Class
+                        if (!mission.includes('type="synixe_contractors_Unit_I_Contractor"')) {
+                            core.error(`${contract} - mission.sqm: No "synixe_contractors_Unit_I_Contractor" units found`);
+                            error &&
+                                messages.push(`[No "synixe_contractors_Unit_I_Contractor" units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`);
+                        }
+                        // Mission - Playable Units
+                        if (!mission.includes('isPlayable=1')) {
+                            core.error(`${contract} - mission.sqm: No playable units found`);
+                            error &&
+                                messages.push(`[No playable units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`);
+                        }
                     }
-                    // Mission - Check Respawn
-                    if (!mission.includes('name="respawn"')) {
-                        core.error(`${contract} - mission.sqm: Respawn not found`);
+                    else {
+                        core.error(`${contract} - mission.sqm: Binarized`);
                         error &&
-                            messages.push(`[Respawn not found](https://github.com/SynixeContractors/MissionTemplate#setup-base)`);
-                    }
-                    // Mission - Check Shop
-                    if (!mission.includes('property="persistent_gear_shop_arsenal_attribute_shop"')) {
-                        core.error(`${contract} - mission.sqm: Shop not found`);
-                        error &&
-                            messages.push(`[Shop not found](https://github.com/SynixeContractors/MissionTemplate#setup-shops)`);
-                    }
-                    // Mission - Has Contractors
-                    if (!mission.includes('description="Contractor"')) {
-                        core.error(`${contract} - mission.sqm: No "Contractor" units found`);
-                        error &&
-                            messages.push(`[No "Contractor" units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`);
-                    }
-                    // Mission - Uses Synixe Unit Class
-                    if (!mission.includes('type="synixe_contractors_Unit_I_Contractor"')) {
-                        core.error(`${contract} - mission.sqm: No "synixe_contractors_Unit_I_Contractor" units found`);
-                        error &&
-                            messages.push(`[No "synixe_contractors_Unit_I_Contractor" units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`);
-                    }
-                    // Mission - Playable Units
-                    if (!mission.includes('isPlayable=1')) {
-                        core.error(`${contract} - mission.sqm: No playable units found`);
-                        error &&
-                            messages.push(`[No playable units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`);
+                            messages.push('[mission.sqm: Binarized](https://github.com/SynixeContractors/Missions#create-a-new-mission)');
                     }
                 }
                 error && body.push(messages);
