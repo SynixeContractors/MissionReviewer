@@ -112,9 +112,7 @@ async function run(): Promise<void> {
 
           // Mission - Check Shop
           if (
-            !mission.includes(
-              'property="persistent_gear_shop_arsenal_attribute_shop"'
-            )
+            !mission.includes('property="crate_client_gear_attribute_shop"')
           ) {
             core.error(`${contract} - mission.sqm: Shop not found`);
             error &&

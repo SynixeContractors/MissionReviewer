@@ -168,7 +168,8 @@ function run() {
                 const description_path = (0, path_1.join)('contracts', contract, 'edit_me/description.ext');
                 if (!(0, fs_1.existsSync)(description_path)) {
                     core.info(`${contract} - Not using template`);
-                    error && messages.push('[Not using template](https://github.com/SynixeContractors/MissionTemplate)');
+                    error &&
+                        messages.push('[Not using template](https://github.com/SynixeContractors/MissionTemplate)');
                 }
                 if ((0, fs_1.existsSync)(description_path)) {
                     // Check Description
@@ -213,7 +214,7 @@ function run() {
                                 messages.push(`[Respawn not found](https://github.com/SynixeContractors/MissionTemplate#setup-base)`);
                         }
                         // Mission - Check Shop
-                        if (!mission.includes('property="persistent_gear_shop_arsenal_attribute_shop"')) {
+                        if (!mission.includes('property="crate_client_gear_attribute_shop"')) {
                             core.error(`${contract} - mission.sqm: Shop not found`);
                             error &&
                                 messages.push(`[Shop not found](https://github.com/SynixeContractors/MissionTemplate#setup-shops)`);
