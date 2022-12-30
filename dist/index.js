@@ -244,6 +244,26 @@ function run() {
                             messages.push('[mission.sqm: Binarized](https://github.com/SynixeContractors/Missions#create-a-new-mission)');
                     }
                 }
+                // Check briefing.sqf
+                const briefing_path = (0, path_1.join)('contracts', contract, 'edit_me', 'briefing.sqf');
+                if (!(0, fs_1.existsSync)(briefing_path)) {
+                    core.error(`${contract} - briefing.sqf not found`);
+                }
+                if ((0, fs_1.existsSync)(briefing_path)) {
+                    const briefing = (0, fs_1.readFileSync)(briefing_path, 'utf8');
+                    if (briefing.includes('INSERT NAME OF EMPLOYER HERE')) {
+                        core.error(`${contract} - briefing.sqf: Employer not set`);
+                        error && messages.push(`briefing.sqf: Employer not set`);
+                    }
+                    if (briefing.includes('INSERT ENEMIES HERE')) {
+                        core.error(`${contract} - briefing.sqf: Situation not set`);
+                        error && messages.push(`briefing.sqf: Situation not set`);
+                    }
+                    if (briefing.includes('YOU CAN WRITE YOUR MISSION DESCRIPTION HERE')) {
+                        core.error(`${contract} - briefing.sqf: Mission not set`);
+                        error && messages.push(`briefing.sqf: Mission not set`);
+                    }
+                }
                 error && body.push(messages);
             }
         }

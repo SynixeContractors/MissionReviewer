@@ -162,6 +162,32 @@ async function run(): Promise<void> {
         }
       }
 
+      // Check briefing.sqf
+      const briefing_path = join(
+        'contracts',
+        contract,
+        'edit_me',
+        'briefing.sqf'
+      );
+      if (!existsSync(briefing_path)) {
+        core.error(`${contract} - briefing.sqf not found`);
+      }
+      if (existsSync(briefing_path)) {
+        const briefing = readFileSync(briefing_path, 'utf8');
+        if (briefing.includes('INSERT NAME OF EMPLOYER HERE')) {
+          core.error(`${contract} - briefing.sqf: Employer not set`);
+          error && messages.push(`briefing.sqf: Employer not set`);
+        }
+        if (briefing.includes('INSERT ENEMIES HERE')) {
+          core.error(`${contract} - briefing.sqf: Situation not set`);
+          error && messages.push(`briefing.sqf: Situation not set`);
+        }
+        if (briefing.includes('YOU CAN WRITE YOUR MISSION DESCRIPTION HERE')) {
+          core.error(`${contract} - briefing.sqf: Mission not set`);
+          error && messages.push(`briefing.sqf: Mission not set`);
+        }
+      }
+
       error && body.push(messages);
     }
   } catch (error) {
