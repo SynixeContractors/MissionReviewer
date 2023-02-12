@@ -243,6 +243,18 @@ function run() {
                         error &&
                             messages.push('[mission.sqm: Binarized](https://github.com/SynixeContractors/Missions#create-a-new-mission)');
                     }
+                    // Mission - Check spawn_land
+                    if (!mission.includes('name="spawn_land"')) {
+                        core.error(`${contract} - mission.sqm: \`spawn_land\` not found`);
+                        error &&
+                            messages.push(`[spawn_land not found](https://github.com/SynixeContractors/MissionTemplate#setup-vehicle-spawns)`);
+                    }
+                    // Mission - Check spawn_thing
+                    if (!mission.includes('name="spawn_thing"')) {
+                        core.error(`${contract} - mission.sqm: \`spawn_thing\` not found`);
+                        error &&
+                            messages.push(`[spawn_thing not found](https://github.com/SynixeContractors/MissionTemplate#setup-vehicle-spawns)`);
+                    }
                 }
                 // Check briefing.sqf
                 const briefing_path = (0, path_1.join)('contracts', contract, 'edit_me', 'briefing.sqf');
@@ -15849,25 +15861,6 @@ class Response extends Body {
 		const response = new Response(null, {status: 0, statusText: ''});
 		response[response_INTERNALS].type = 'error';
 		return response;
-	}
-
-	static json(data = undefined, init = {}) {
-		const body = JSON.stringify(data);
-
-		if (body === undefined) {
-			throw new TypeError('data is not JSON serializable');
-		}
-
-		const headers = new Headers(init && init.headers);
-
-		if (!headers.has('content-type')) {
-			headers.set('content-type', 'application/json');
-		}
-
-		return new Response(body, {
-			...init,
-			headers
-		});
 	}
 
 	get [Symbol.toStringTag]() {

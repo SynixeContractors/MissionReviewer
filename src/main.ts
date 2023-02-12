@@ -160,6 +160,24 @@ async function run(): Promise<void> {
               '[mission.sqm: Binarized](https://github.com/SynixeContractors/Missions#create-a-new-mission)'
             );
         }
+
+        // Mission - Check spawn_land
+        if (!mission.includes('name="spawn_land"')) {
+          core.error(`${contract} - mission.sqm: \`spawn_land\` not found`);
+          error &&
+            messages.push(
+              `[spawn_land not found](https://github.com/SynixeContractors/MissionTemplate#setup-vehicle-spawns)`
+            );
+        }
+
+        // Mission - Check spawn_thing
+        if (!mission.includes('name="spawn_thing"')) {
+          core.error(`${contract} - mission.sqm: \`spawn_thing\` not found`);
+          error &&
+            messages.push(
+              `[spawn_thing not found](https://github.com/SynixeContractors/MissionTemplate#setup-vehicle-spawns)`
+            );
+        }
       }
 
       // Check briefing.sqf
