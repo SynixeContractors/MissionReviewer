@@ -206,6 +206,26 @@ async function run(): Promise<void> {
         }
       }
 
+      // Check script_component.hpp
+      const script_component_path = join(
+        'contracts',
+        contract,
+        'do_not_edit',
+        'script_component.hpp'
+      );
+      if (!existsSync(script_component_path)) {
+        core.error(`${contract} - script_component.hpp not found`);
+      }
+      if (existsSync(script_component_path)) {
+        const script_component = readFileSync(script_component_path, 'utf8');
+        if (!script_component.includes('#define MAJOR 2')) {
+          core.error(
+            `${contract} - script_component.hpp: Template is outdated`
+          );
+          error && messages.push(`Template is outdated`);
+        }
+      }
+
       error && body.push(messages);
     }
   } catch (error) {
