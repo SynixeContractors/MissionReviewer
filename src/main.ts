@@ -1,18 +1,13 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 
-import {existsSync, readFileSync} from 'fs';
 import {FileService} from './files';
-import {join} from 'path';
 import {readdir} from 'fs/promises';
 import fetch from 'node-fetch';
-
-const regex_desc_name = /^OnLoadName = "(.+?)";$/m;
-const regex_desc_summary = /^OnLoadMission = "(.+?)";$/m;
-const regex_desc_author = /^author = "(.+?)";$/m;
+import {MissionReport, check} from './mission';
 
 async function run(): Promise<void> {
-  const body = [];
+  const reports: MissionReport[] = [];
 
   try {
     const contracts = (await readdir('contracts', {withFileTypes: true}))
@@ -29,210 +24,34 @@ async function run(): Promise<void> {
 
     for (const file of files) {
       if (file.endsWith('.pbo"')) {
-        body.push([
-          '**' + file + '**',
-          '[PBOs are not accepted, only mission folders](https://github.com/SynixeContractors/Missions#create-a-new-mission)'
-        ]);
+        reports.push({
+          name: file,
+          warnings: [],
+          errors: [
+            '[PBOs are not accepted, only mission folders](https://github.com/SynixeContractors/Missions#create-a-new-mission)'
+          ],
+          inPR: files.includes(file)
+        });
       }
     }
 
     // Loop over contracts
     for (const contract of contracts) {
-      const messages: string[] = ['**' + contract + '**'];
-      let error = files.find(file => file.includes(contract));
       core.info(`Checking ${contract}`);
-      const description_path = join(
-        'contracts',
-        contract,
-        'edit_me/description.ext'
-      );
-      if (!existsSync(description_path)) {
-        core.info(`${contract} - Not using template`);
-        error &&
-          messages.push(
-            '[Not using template](https://github.com/SynixeContractors/MissionTemplate)'
-          );
-      }
-      if (existsSync(description_path)) {
-        // Check Description
-        const description = readFileSync(description_path, 'utf8');
-        // Description - Check Name
-        if (regex_desc_name.exec(description) === null) {
-          core.error(`${contract} - Description: Name not set (OnLoadName)`);
-          error &&
-            messages.push(
-              `[description.ext: Name not set (OnLoadName)](https://github.com/SynixeContractors/MissionTemplate#mission-details)`
-            );
-        }
-        // Description - Check Summary
-        if (regex_desc_summary.exec(description) === null) {
-          core.error(
-            `${contract} - Description: Summary not set (OnLoadMission)`
-          );
-          error &&
-            messages.push(
-              `[description.ext: Summary not set (OnLoadMission)](https://github.com/SynixeContractors/MissionTemplate#mission-details)`
-            );
-        }
-        // Description - Check Author
-        if (regex_desc_author.exec(description) === null) {
-          core.error(`${contract} - Description: Author not set (author)`);
-          error &&
-            messages.push(
-              `[description.ext: Author not set (author)](https://github.com/SynixeContractors/MissionTemplate#mission-details)`
-            );
-        }
-      }
-
-      // Check mission.sqm
-      const mission_path = join('contracts', contract, 'mission.sqm');
-      if (!existsSync(mission_path)) {
-        core.error(`${contract} - mission.sqm not found`);
-      }
-      if (existsSync(mission_path)) {
-        const mission = readFileSync(mission_path, 'utf8');
-        if (mission.startsWith('version')) {
-          // Mission - Spectator Screen
-          if (!mission.includes('type="synixe_spectator_screen"')) {
-            core.error(`${contract} - mission.sqm: Spectator Screen not found`);
-            error &&
-              messages.push(
-                `[Spectator Screen not found](https://github.com/SynixeContractors/MissionTemplate#setup-base)`
-              );
-          }
-
-          // Mission - Check Respawn
-          if (!mission.includes('name="respawn"')) {
-            core.error(`${contract} - mission.sqm: Respawn not found`);
-            error &&
-              messages.push(
-                `[Respawn not found](https://github.com/SynixeContractors/MissionTemplate#setup-base)`
-              );
-          }
-
-          // Mission - Check Shop
-          if (
-            !mission.includes('property="crate_client_gear_attribute_shop"')
-          ) {
-            core.error(`${contract} - mission.sqm: Shop not found`);
-            error &&
-              messages.push(
-                `[Shop not found](https://github.com/SynixeContractors/MissionTemplate#setup-shops)`
-              );
-          }
-
-          // Mission - Has Contractors
-          if (!mission.includes('description="Contractor"')) {
-            core.error(
-              `${contract} - mission.sqm: No "Contractor" units found`
-            );
-            error &&
-              messages.push(
-                `[No "Contractor" units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`
-              );
-          }
-
-          // Mission - Uses Synixe Unit Class
-          if (
-            !mission.includes('type="synixe_contractors_Unit_I_Contractor"')
-          ) {
-            core.error(
-              `${contract} - mission.sqm: No "synixe_contractors_Unit_I_Contractor" units found`
-            );
-            error &&
-              messages.push(
-                `[No "synixe_contractors_Unit_I_Contractor" units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`
-              );
-          }
-
-          // Mission - Playable Units
-          if (!mission.includes('isPlayable=1')) {
-            core.error(`${contract} - mission.sqm: No playable units found`);
-            error &&
-              messages.push(
-                `[No playable units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`
-              );
-          }
-        } else {
-          core.error(`${contract} - mission.sqm: Binarized`);
-          error &&
-            messages.push(
-              '[mission.sqm: Binarized](https://github.com/SynixeContractors/Missions#create-a-new-mission)'
-            );
-        }
-
-        // Mission - Check spawn_land
-        if (!mission.includes('name="spawn_land"')) {
-          core.error(`${contract} - mission.sqm: \`spawn_land\` not found`);
-          error &&
-            messages.push(
-              `[spawn_land not found](https://github.com/SynixeContractors/MissionTemplate#setup-vehicle-spawns)`
-            );
-        }
-
-        // Mission - Check spawn_thing
-        if (!mission.includes('name="spawn_thing"')) {
-          core.error(`${contract} - mission.sqm: \`spawn_thing\` not found`);
-          error &&
-            messages.push(
-              `[spawn_thing not found](https://github.com/SynixeContractors/MissionTemplate#setup-vehicle-spawns)`
-            );
-        }
-      }
-
-      // Check briefing.sqf
-      const briefing_path = join(
-        'contracts',
-        contract,
-        'edit_me',
-        'briefing.sqf'
-      );
-      if (!existsSync(briefing_path)) {
-        core.error(`${contract} - briefing.sqf not found`);
-      }
-      if (existsSync(briefing_path)) {
-        const briefing = readFileSync(briefing_path, 'utf8');
-        if (briefing.includes('INSERT NAME OF EMPLOYER HERE')) {
-          core.error(`${contract} - briefing.sqf: Employer not set`);
-          error && messages.push(`briefing.sqf: Employer not set`);
-        }
-        if (briefing.includes('INSERT ENEMIES HERE')) {
-          core.error(`${contract} - briefing.sqf: Situation not set`);
-          error && messages.push(`briefing.sqf: Situation not set`);
-        }
-        if (briefing.includes('YOU CAN WRITE YOUR MISSION DESCRIPTION HERE')) {
-          core.error(`${contract} - briefing.sqf: Mission not set`);
-          error && messages.push(`briefing.sqf: Mission not set`);
-        }
-      }
-
-      // Check script_component.hpp
-      const script_component_path = join(
-        'contracts',
-        contract,
-        'do_not_edit',
-        'script_component.hpp'
-      );
-      if (!existsSync(script_component_path)) {
-        core.error(`${contract} - script_component.hpp not found`);
-      }
-      if (existsSync(script_component_path)) {
-        const script_component = readFileSync(script_component_path, 'utf8');
-        if (!script_component.includes('#define MAJOR 2')) {
-          core.error(
-            `${contract} - script_component.hpp: Template is outdated`
-          );
-          error && messages.push(`Template is outdated`);
-        }
-      }
-
-      error && body.push(messages);
+      let report = check(contract);
+      report.inPR = files.find(file => file.includes(contract)) !== undefined;
+      reports.push(report);
     }
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message);
   }
 
   if (github.context.payload.pull_request) {
+    const body: string[] = [];
+    const failed =
+      reports.filter(report => report.inPR && report.errors.length > 0).length >
+      0;
+
     core.debug('Sending comment');
     const octo = github.getOctokit(core.getInput('GITHUB_TOKEN'));
     let options: {
@@ -248,7 +67,22 @@ async function run(): Promise<void> {
       body: '',
       event: 'COMMENT'
     };
-    if (body.every(messages => messages.length === 1)) {
+
+    if (failed) {
+      reports.forEach(report => {
+        if (report.inPR) {
+          body.push(`### ${report.name}`);
+          body.push('');
+          body.push(...report.errors);
+          body.push('');
+        }
+      });
+      options = {
+        ...options,
+        body: body.join('\n'),
+        event: 'REQUEST_CHANGES'
+      };
+    } else {
       options = {
         ...options,
         body: '',
@@ -289,12 +123,6 @@ async function run(): Promise<void> {
           }
         );
       }
-    } else {
-      options = {
-        ...options,
-        body: body.map(m => m.join('\n')).join('\n'),
-        event: 'REQUEST_CHANGES'
-      };
     }
     octo.rest.pulls.createReview(options);
   } else {

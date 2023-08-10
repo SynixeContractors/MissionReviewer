@@ -132,17 +132,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
-const fs_1 = __nccwpck_require__(7147);
 const files_1 = __nccwpck_require__(1743);
-const path_1 = __nccwpck_require__(1017);
 const promises_1 = __nccwpck_require__(3292);
 const node_fetch_1 = __importDefault(__nccwpck_require__(4429));
-const regex_desc_name = /^OnLoadName = "(.+?)";$/m;
-const regex_desc_summary = /^OnLoadMission = "(.+?)";$/m;
-const regex_desc_author = /^author = "(.+?)";$/m;
+const mission_1 = __nccwpck_require__(1557);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        const body = [];
+        const reports = [];
         try {
             const contracts = (yield (0, promises_1.readdir)('contracts', { withFileTypes: true }))
                 .filter(dirent => dirent.isDirectory())
@@ -154,141 +150,22 @@ function run() {
             }
             for (const file of files) {
                 if (file.endsWith('.pbo"')) {
-                    body.push([
-                        '**' + file + '**',
-                        '[PBOs are not accepted, only mission folders](https://github.com/SynixeContractors/Missions#create-a-new-mission)'
-                    ]);
+                    reports.push({
+                        name: file,
+                        warnings: [],
+                        errors: [
+                            '[PBOs are not accepted, only mission folders](https://github.com/SynixeContractors/Missions#create-a-new-mission)'
+                        ],
+                        inPR: files.includes(file)
+                    });
                 }
             }
             // Loop over contracts
             for (const contract of contracts) {
-                const messages = ['**' + contract + '**'];
-                let error = files.find(file => file.includes(contract));
                 core.info(`Checking ${contract}`);
-                const description_path = (0, path_1.join)('contracts', contract, 'edit_me/description.ext');
-                if (!(0, fs_1.existsSync)(description_path)) {
-                    core.info(`${contract} - Not using template`);
-                    error &&
-                        messages.push('[Not using template](https://github.com/SynixeContractors/MissionTemplate)');
-                }
-                if ((0, fs_1.existsSync)(description_path)) {
-                    // Check Description
-                    const description = (0, fs_1.readFileSync)(description_path, 'utf8');
-                    // Description - Check Name
-                    if (regex_desc_name.exec(description) === null) {
-                        core.error(`${contract} - Description: Name not set (OnLoadName)`);
-                        error &&
-                            messages.push(`[description.ext: Name not set (OnLoadName)](https://github.com/SynixeContractors/MissionTemplate#mission-details)`);
-                    }
-                    // Description - Check Summary
-                    if (regex_desc_summary.exec(description) === null) {
-                        core.error(`${contract} - Description: Summary not set (OnLoadMission)`);
-                        error &&
-                            messages.push(`[description.ext: Summary not set (OnLoadMission)](https://github.com/SynixeContractors/MissionTemplate#mission-details)`);
-                    }
-                    // Description - Check Author
-                    if (regex_desc_author.exec(description) === null) {
-                        core.error(`${contract} - Description: Author not set (author)`);
-                        error &&
-                            messages.push(`[description.ext: Author not set (author)](https://github.com/SynixeContractors/MissionTemplate#mission-details)`);
-                    }
-                }
-                // Check mission.sqm
-                const mission_path = (0, path_1.join)('contracts', contract, 'mission.sqm');
-                if (!(0, fs_1.existsSync)(mission_path)) {
-                    core.error(`${contract} - mission.sqm not found`);
-                }
-                if ((0, fs_1.existsSync)(mission_path)) {
-                    const mission = (0, fs_1.readFileSync)(mission_path, 'utf8');
-                    if (mission.startsWith('version')) {
-                        // Mission - Spectator Screen
-                        if (!mission.includes('type="synixe_spectator_screen"')) {
-                            core.error(`${contract} - mission.sqm: Spectator Screen not found`);
-                            error &&
-                                messages.push(`[Spectator Screen not found](https://github.com/SynixeContractors/MissionTemplate#setup-base)`);
-                        }
-                        // Mission - Check Respawn
-                        if (!mission.includes('name="respawn"')) {
-                            core.error(`${contract} - mission.sqm: Respawn not found`);
-                            error &&
-                                messages.push(`[Respawn not found](https://github.com/SynixeContractors/MissionTemplate#setup-base)`);
-                        }
-                        // Mission - Check Shop
-                        if (!mission.includes('property="crate_client_gear_attribute_shop"')) {
-                            core.error(`${contract} - mission.sqm: Shop not found`);
-                            error &&
-                                messages.push(`[Shop not found](https://github.com/SynixeContractors/MissionTemplate#setup-shops)`);
-                        }
-                        // Mission - Has Contractors
-                        if (!mission.includes('description="Contractor"')) {
-                            core.error(`${contract} - mission.sqm: No "Contractor" units found`);
-                            error &&
-                                messages.push(`[No "Contractor" units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`);
-                        }
-                        // Mission - Uses Synixe Unit Class
-                        if (!mission.includes('type="synixe_contractors_Unit_I_Contractor"')) {
-                            core.error(`${contract} - mission.sqm: No "synixe_contractors_Unit_I_Contractor" units found`);
-                            error &&
-                                messages.push(`[No "synixe_contractors_Unit_I_Contractor" units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`);
-                        }
-                        // Mission - Playable Units
-                        if (!mission.includes('isPlayable=1')) {
-                            core.error(`${contract} - mission.sqm: No playable units found`);
-                            error &&
-                                messages.push(`[No playable units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`);
-                        }
-                    }
-                    else {
-                        core.error(`${contract} - mission.sqm: Binarized`);
-                        error &&
-                            messages.push('[mission.sqm: Binarized](https://github.com/SynixeContractors/Missions#create-a-new-mission)');
-                    }
-                    // Mission - Check spawn_land
-                    if (!mission.includes('name="spawn_land"')) {
-                        core.error(`${contract} - mission.sqm: \`spawn_land\` not found`);
-                        error &&
-                            messages.push(`[spawn_land not found](https://github.com/SynixeContractors/MissionTemplate#setup-vehicle-spawns)`);
-                    }
-                    // Mission - Check spawn_thing
-                    if (!mission.includes('name="spawn_thing"')) {
-                        core.error(`${contract} - mission.sqm: \`spawn_thing\` not found`);
-                        error &&
-                            messages.push(`[spawn_thing not found](https://github.com/SynixeContractors/MissionTemplate#setup-vehicle-spawns)`);
-                    }
-                }
-                // Check briefing.sqf
-                const briefing_path = (0, path_1.join)('contracts', contract, 'edit_me', 'briefing.sqf');
-                if (!(0, fs_1.existsSync)(briefing_path)) {
-                    core.error(`${contract} - briefing.sqf not found`);
-                }
-                if ((0, fs_1.existsSync)(briefing_path)) {
-                    const briefing = (0, fs_1.readFileSync)(briefing_path, 'utf8');
-                    if (briefing.includes('INSERT NAME OF EMPLOYER HERE')) {
-                        core.error(`${contract} - briefing.sqf: Employer not set`);
-                        error && messages.push(`briefing.sqf: Employer not set`);
-                    }
-                    if (briefing.includes('INSERT ENEMIES HERE')) {
-                        core.error(`${contract} - briefing.sqf: Situation not set`);
-                        error && messages.push(`briefing.sqf: Situation not set`);
-                    }
-                    if (briefing.includes('YOU CAN WRITE YOUR MISSION DESCRIPTION HERE')) {
-                        core.error(`${contract} - briefing.sqf: Mission not set`);
-                        error && messages.push(`briefing.sqf: Mission not set`);
-                    }
-                }
-                // Check script_component.hpp
-                const script_component_path = (0, path_1.join)('contracts', contract, 'do_not_edit', 'script_component.hpp');
-                if (!(0, fs_1.existsSync)(script_component_path)) {
-                    core.error(`${contract} - script_component.hpp not found`);
-                }
-                if ((0, fs_1.existsSync)(script_component_path)) {
-                    const script_component = (0, fs_1.readFileSync)(script_component_path, 'utf8');
-                    if (!script_component.includes('#define MAJOR 2')) {
-                        core.error(`${contract} - script_component.hpp: Template is outdated`);
-                        error && messages.push(`Template is outdated`);
-                    }
-                }
-                error && body.push(messages);
+                let report = (0, mission_1.check)(contract);
+                report.inPR = files.find(file => file.includes(contract)) !== undefined;
+                reports.push(report);
             }
         }
         catch (error) {
@@ -296,6 +173,9 @@ function run() {
                 core.setFailed(error.message);
         }
         if (github.context.payload.pull_request) {
+            const body = [];
+            const failed = reports.filter(report => report.inPR && report.errors.length > 0).length >
+                0;
             core.debug('Sending comment');
             const octo = github.getOctokit(core.getInput('GITHUB_TOKEN'));
             let options = {
@@ -305,7 +185,18 @@ function run() {
                 body: '',
                 event: 'COMMENT'
             };
-            if (body.every(messages => messages.length === 1)) {
+            if (failed) {
+                reports.forEach(report => {
+                    if (report.inPR) {
+                        body.push(`### ${report.name}`);
+                        body.push('');
+                        body.push(...report.errors);
+                        body.push('');
+                    }
+                });
+                options = Object.assign(Object.assign({}, options), { body: body.join('\n'), event: 'REQUEST_CHANGES' });
+            }
+            else {
                 options = Object.assign(Object.assign({}, options), { body: '', event: 'APPROVE' });
                 const comments = yield octo.rest.pulls.listReviews({
                     owner: github.context.repo.owner,
@@ -335,9 +226,6 @@ function run() {
                     });
                 }
             }
-            else {
-                options = Object.assign(Object.assign({}, options), { body: body.map(m => m.join('\n')).join('\n'), event: 'REQUEST_CHANGES' });
-            }
             octo.rest.pulls.createReview(options);
         }
         else {
@@ -346,6 +234,369 @@ function run() {
     });
 }
 run();
+
+
+/***/ }),
+
+/***/ 1557:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.check = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const fs_1 = __nccwpck_require__(7147);
+const path_1 = __nccwpck_require__(1017);
+const _2_1 = __nccwpck_require__(6532);
+const _3_1 = __nccwpck_require__(4969);
+function check(name) {
+    const description_path = (0, path_1.join)('contracts', name, 'do_not_edit/description.ext');
+    if (!(0, fs_1.existsSync)(description_path)) {
+        core.info(`${name} - Not using template`);
+        return {
+            name,
+            warnings: [],
+            errors: [
+                '[Not using template](https://github.com/SynixeContractors/MissionTemplate)'
+            ],
+            inPR: false
+        };
+    }
+    // Get Version
+    const description = (0, fs_1.readFileSync)(description_path, 'utf8');
+    const version_exec = /^synixe_template = (\d+);/m.exec(description);
+    let version = 2;
+    if (version_exec !== null) {
+        version = parseInt(version_exec[1]);
+    }
+    console.log(`${name} - Using template: v${version}`);
+    switch (version) {
+        case 2:
+            let report = (0, _2_1.check2)(name);
+            report.warnings.push('`Using old template: v2`');
+            return report;
+        case 3:
+            return (0, _3_1.check3)(name);
+        default:
+            return {
+                name,
+                warnings: [],
+                errors: [`Unknown version: ${version}`],
+                inPR: false
+            };
+    }
+}
+exports.check = check;
+
+
+/***/ }),
+
+/***/ 6532:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.check2 = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const fs_1 = __nccwpck_require__(7147);
+const path_1 = __nccwpck_require__(1017);
+const regex_desc_name = /^OnLoadName = "(.+?)";$/m;
+const regex_desc_summary = /^OnLoadMission = "(.+?)";$/m;
+const regex_desc_author = /^author = "(.+?)";$/m;
+function check2(name) {
+    const report = {
+        name,
+        warnings: [],
+        errors: [],
+        inPR: false
+    };
+    const description_path = (0, path_1.join)('contracts', name, 'edit_me/description.ext');
+    if (!(0, fs_1.existsSync)(description_path)) {
+        core.info(`${name} - Not using template`);
+        report.errors.push('[Not using template](https://github.com/SynixeContractors/MissionTemplate)');
+        return report;
+    }
+    const description = (0, fs_1.readFileSync)(description_path, 'utf8');
+    // Description - Check Name
+    if (regex_desc_name.exec(description) === null) {
+        core.error(`${name} - Description: Name not set (OnLoadName)`);
+        report.errors.push(`[description.ext: Name not set (OnLoadName)](https://github.com/SynixeContractors/MissionTemplate#mission-details)`);
+    }
+    // Description - Check Summary
+    if (regex_desc_summary.exec(description) === null) {
+        core.error(`${name} - Description: Summary not set (OnLoadMission)`);
+        report.errors.push(`[description.ext: Summary not set (OnLoadMission)](https://github.com/SynixeContractors/MissionTemplate#mission-details)`);
+    }
+    // Description - Check Author
+    if (regex_desc_author.exec(description) === null) {
+        core.error(`${name} - Description: Author not set (author)`);
+        report.errors.push(`[description.ext: Author not set (author)](https://github.com/SynixeContractors/MissionTemplate#mission-details)`);
+    }
+    // Check mission.sqm
+    const mission_path = (0, path_1.join)('contracts', name, 'mission.sqm');
+    if (!(0, fs_1.existsSync)(mission_path)) {
+        core.error(`${name} - mission.sqm not found`);
+    }
+    if ((0, fs_1.existsSync)(mission_path)) {
+        const mission = (0, fs_1.readFileSync)(mission_path, 'utf8');
+        if (mission.startsWith('version')) {
+            // Mission - Spectator Screen
+            if (!mission.includes('type="synixe_spectator_screen"')) {
+                core.error(`${name} - mission.sqm: Spectator Screen not found`);
+                report.errors.push(`[Spectator Screen not found](https://github.com/SynixeContractors/MissionTemplate#setup-base)`);
+            }
+            // Mission - Check Respawn
+            if (!mission.includes('name="respawn"')) {
+                core.error(`${name} - mission.sqm: Respawn not found`);
+                report.errors.push(`[Respawn not found](https://github.com/SynixeContractors/MissionTemplate#setup-base)`);
+            }
+            // Mission - Check Shop
+            if (!mission.includes('property="crate_client_gear_attribute_shop"')) {
+                core.error(`${name} - mission.sqm: Shop not found`);
+                report.errors.push(`[Shop not found](https://github.com/SynixeContractors/MissionTemplate#setup-shops)`);
+            }
+            // Mission - Has Contractors
+            if (!mission.includes('description="Contractor"')) {
+                core.error(`${name} - mission.sqm: No "Contractor" units found`);
+                report.errors.push(`[No "Contractor" units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`);
+            }
+            // Mission - Uses Synixe Unit Class
+            if (!mission.includes('type="synixe_contractors_Unit_I_Contractor"')) {
+                core.error(`${name} - mission.sqm: No "synixe_contractors_Unit_I_Contractor" units found`);
+                report.errors.push(`[No "synixe_contractors_Unit_I_Contractor" units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`);
+            }
+            // Mission - Playable Units
+            if (!mission.includes('isPlayable=1')) {
+                core.error(`${name} - mission.sqm: No playable units found`);
+                report.errors.push(`[No playable units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`);
+            }
+            // Mission - Check spawn_land
+            if (!mission.includes('name="spawn_land"')) {
+                core.error(`${name} - mission.sqm: \`spawn_land\` not found`);
+                report.errors.push(`[spawn_land not found](https://github.com/SynixeContractors/MissionTemplate#setup-vehicle-spawns)`);
+            }
+            // Mission - Check spawn_thing
+            if (!mission.includes('name="spawn_thing"')) {
+                core.error(`${name} - mission.sqm: \`spawn_thing\` not found`);
+                report.errors.push(`[spawn_thing not found](https://github.com/SynixeContractors/MissionTemplate#setup-vehicle-spawns)`);
+            }
+        }
+        else {
+            core.error(`${name} - mission.sqm: Binarized`);
+            report.errors.push('[mission.sqm: Binarized](https://github.com/SynixeContractors/Missions#create-a-new-mission)');
+        }
+    }
+    // Check briefing.sqf
+    const briefing_path = (0, path_1.join)('contracts', name, 'edit_me', 'briefing.sqf');
+    if (!(0, fs_1.existsSync)(briefing_path)) {
+        core.error(`${name} - briefing.sqf not found`);
+    }
+    if ((0, fs_1.existsSync)(briefing_path)) {
+        const briefing = (0, fs_1.readFileSync)(briefing_path, 'utf8');
+        if (briefing.includes('INSERT NAME OF EMPLOYER HERE')) {
+            core.error(`${name} - briefing.sqf: Employer not set`);
+            report.errors.push(`briefing.sqf: Employer not set`);
+        }
+        if (briefing.includes('INSERT ENEMIES HERE')) {
+            core.error(`${name} - briefing.sqf: Situation not set`);
+            report.errors.push(`briefing.sqf: Situation not set`);
+        }
+        if (briefing.includes('YOU CAN WRITE YOUR MISSION DESCRIPTION HERE')) {
+            core.error(`${name} - briefing.sqf: Mission not set`);
+            report.errors.push(`briefing.sqf: Mission not set`);
+        }
+    }
+    return report;
+}
+exports.check2 = check2;
+
+
+/***/ }),
+
+/***/ 4969:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.check3 = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const fs_1 = __nccwpck_require__(7147);
+const path_1 = __nccwpck_require__(1017);
+const regex_desc_name = /^OnLoadName = "(.+?)";$/m;
+const regex_desc_summary = /^OnLoadMission = "(.+?)";$/m;
+const regex_desc_author = /^author = "(.+?)";$/m;
+function check3(name) {
+    const report = {
+        name,
+        warnings: [],
+        errors: [],
+        inPR: false
+    };
+    const description_path = (0, path_1.join)('contracts', name, 'edit_me/description.ext');
+    if (!(0, fs_1.existsSync)(description_path)) {
+        core.info(`${name} - Not using template`);
+        report.errors.push('[Not using template](https://github.com/SynixeContractors/MissionTemplate)');
+        return report;
+    }
+    const description = (0, fs_1.readFileSync)(description_path, 'utf8');
+    // Description - Check Name
+    if (regex_desc_name.exec(description) === null) {
+        core.error(`${name} - Description: Name not set (OnLoadName)`);
+        report.errors.push(`[description.ext: Name not set (OnLoadName)](https://github.com/SynixeContractors/MissionTemplate#mission-details)`);
+    }
+    // Description - Check Summary
+    if (regex_desc_summary.exec(description) === null) {
+        core.error(`${name} - Description: Summary not set (OnLoadMission)`);
+        report.errors.push(`[description.ext: Summary not set (OnLoadMission)](https://github.com/SynixeContractors/MissionTemplate#mission-details)`);
+    }
+    // Description - Check Author
+    if (regex_desc_author.exec(description) === null) {
+        core.error(`${name} - Description: Author not set (author)`);
+        report.errors.push(`[description.ext: Author not set (author)](https://github.com/SynixeContractors/MissionTemplate#mission-details)`);
+    }
+    // Check mission.sqm
+    const mission_path = (0, path_1.join)('contracts', name, 'mission.sqm');
+    if (!(0, fs_1.existsSync)(mission_path)) {
+        core.error(`${name} - mission.sqm not found`);
+    }
+    if ((0, fs_1.existsSync)(mission_path)) {
+        const mission = (0, fs_1.readFileSync)(mission_path, 'utf8');
+        if (mission.startsWith('version')) {
+            // Mission - Spectator Screen
+            if (!mission.includes('type="synixe_spectator_screen"')) {
+                core.error(`${name} - mission.sqm: Spectator Screen not found`);
+                report.errors.push(`[Spectator Screen not found](https://github.com/SynixeContractors/MissionTemplate#setup-base)`);
+            }
+            // Mission - Check Respawn
+            if (!mission.includes('name="respawn"')) {
+                core.error(`${name} - mission.sqm: Respawn not found`);
+                report.errors.push(`[Respawn not found](https://github.com/SynixeContractors/MissionTemplate#setup-base)`);
+            }
+            // Mission - Check Shop
+            if (!mission.includes('property="crate_client_gear_attribute_shop"')) {
+                core.error(`${name} - mission.sqm: Shop not found`);
+                report.errors.push(`[Shop not found](https://github.com/SynixeContractors/MissionTemplate#setup-shops)`);
+            }
+            // Mission - Has Contractors
+            if (!mission.includes('description="Contractor"')) {
+                core.error(`${name} - mission.sqm: No "Contractor" units found`);
+                report.errors.push(`[No "Contractor" units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`);
+            }
+            // Mission - Uses Synixe Unit Class
+            if (!mission.includes('type="synixe_contractors_Unit_I_Contractor"')) {
+                core.error(`${name} - mission.sqm: No "synixe_contractors_Unit_I_Contractor" units found`);
+                report.errors.push(`[No "synixe_contractors_Unit_I_Contractor" units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`);
+            }
+            // Mission - Playable Units
+            if (!mission.includes('isPlayable=1')) {
+                core.error(`${name} - mission.sqm: No playable units found`);
+                report.errors.push(`[No playable units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`);
+            }
+            // Mission - Check spawn_land
+            if (!mission.includes('name="spawn_land"')) {
+                core.error(`${name} - mission.sqm: \`spawn_land\` not found`);
+                report.errors.push(`[spawn_land not found](https://github.com/SynixeContractors/MissionTemplate#setup-vehicle-spawns)`);
+            }
+            // Mission - Check spawn_thing
+            if (!mission.includes('name="spawn_thing"')) {
+                core.error(`${name} - mission.sqm: \`spawn_thing\` not found`);
+                report.errors.push(`[spawn_thing not found](https://github.com/SynixeContractors/MissionTemplate#setup-vehicle-spawns)`);
+            }
+        }
+        else {
+            core.error(`${name} - mission.sqm: Binarized`);
+            report.errors.push('[mission.sqm: Binarized](https://github.com/SynixeContractors/Missions#create-a-new-mission)');
+        }
+    }
+    ['employer', 'mission', 'objectives', 'situation'].forEach(title => {
+        // Check briefing.sqf
+        const briefing_path = (0, path_1.join)('contracts', name, 'edit_me', 'briefing', `${title}.html`);
+        if (!(0, fs_1.existsSync)(briefing_path)) {
+            core.error(`${name} - ${title}.html not found`);
+        }
+        if ((0, fs_1.existsSync)(briefing_path)) {
+            const briefing = (0, fs_1.readFileSync)(briefing_path, 'utf8');
+            if (briefing.includes('INSERT')) {
+                core.error(`${name} - ${title}.html: Not edited`);
+                report.errors.push(`${title}.html: Not edited`);
+            }
+        }
+    });
+    return report;
+}
+exports.check3 = check3;
 
 
 /***/ }),
@@ -1776,6 +2027,19 @@ class HttpClientResponse {
             }));
         });
     }
+    readBodyBuffer() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+                const chunks = [];
+                this.message.on('data', (chunk) => {
+                    chunks.push(chunk);
+                });
+                this.message.on('end', () => {
+                    resolve(Buffer.concat(chunks));
+                });
+            }));
+        });
+    }
 }
 exports.HttpClientResponse = HttpClientResponse;
 function isHttps(requestUrl) {
@@ -2280,7 +2544,13 @@ function getProxyUrl(reqUrl) {
         }
     })();
     if (proxyVar) {
-        return new URL(proxyVar);
+        try {
+            return new URL(proxyVar);
+        }
+        catch (_a) {
+            if (!proxyVar.startsWith('http://') && !proxyVar.startsWith('https://'))
+                return new URL(`http://${proxyVar}`);
+        }
     }
     else {
         return undefined;
@@ -2290,6 +2560,10 @@ exports.getProxyUrl = getProxyUrl;
 function checkBypass(reqUrl) {
     if (!reqUrl.hostname) {
         return false;
+    }
+    const reqHost = reqUrl.hostname;
+    if (isLoopbackAddress(reqHost)) {
+        return true;
     }
     const noProxy = process.env['no_proxy'] || process.env['NO_PROXY'] || '';
     if (!noProxy) {
@@ -2316,13 +2590,24 @@ function checkBypass(reqUrl) {
         .split(',')
         .map(x => x.trim().toUpperCase())
         .filter(x => x)) {
-        if (upperReqHosts.some(x => x === upperNoProxyItem)) {
+        if (upperNoProxyItem === '*' ||
+            upperReqHosts.some(x => x === upperNoProxyItem ||
+                x.endsWith(`.${upperNoProxyItem}`) ||
+                (upperNoProxyItem.startsWith('.') &&
+                    x.endsWith(`${upperNoProxyItem}`)))) {
             return true;
         }
     }
     return false;
 }
 exports.checkBypass = checkBypass;
+function isLoopbackAddress(host) {
+    const hostLower = host.toLowerCase();
+    return (hostLower === 'localhost' ||
+        hostLower.startsWith('127.') ||
+        hostLower.startsWith('[::1]') ||
+        hostLower.startsWith('[0:0:0:0:0:0:0:1]'));
+}
 //# sourceMappingURL=proxy.js.map
 
 /***/ }),
@@ -6117,6 +6402,20 @@ const isDomainOrSubdomain = function isDomainOrSubdomain(destination, original) 
 };
 
 /**
+ * isSameProtocol reports whether the two provided URLs use the same protocol.
+ *
+ * Both domains must already be in canonical form.
+ * @param {string|URL} original
+ * @param {string|URL} destination
+ */
+const isSameProtocol = function isSameProtocol(destination, original) {
+	const orig = new URL$1(original).protocol;
+	const dest = new URL$1(destination).protocol;
+
+	return orig === dest;
+};
+
+/**
  * Fetch function
  *
  * @param   Mixed    url   Absolute url or Request instance
@@ -6147,7 +6446,7 @@ function fetch(url, opts) {
 			let error = new AbortError('The user aborted a request.');
 			reject(error);
 			if (request.body && request.body instanceof Stream.Readable) {
-				request.body.destroy(error);
+				destroyStream(request.body, error);
 			}
 			if (!response || !response.body) return;
 			response.body.emit('error', error);
@@ -6188,8 +6487,42 @@ function fetch(url, opts) {
 
 		req.on('error', function (err) {
 			reject(new FetchError(`request to ${request.url} failed, reason: ${err.message}`, 'system', err));
+
+			if (response && response.body) {
+				destroyStream(response.body, err);
+			}
+
 			finalize();
 		});
+
+		fixResponseChunkedTransferBadEnding(req, function (err) {
+			if (signal && signal.aborted) {
+				return;
+			}
+
+			if (response && response.body) {
+				destroyStream(response.body, err);
+			}
+		});
+
+		/* c8 ignore next 18 */
+		if (parseInt(process.version.substring(1)) < 14) {
+			// Before Node.js 14, pipeline() does not fully support async iterators and does not always
+			// properly handle when the socket close/end events are out of order.
+			req.on('socket', function (s) {
+				s.addListener('close', function (hadError) {
+					// if a data listener is still present we didn't end cleanly
+					const hasDataListener = s.listenerCount('data') > 0;
+
+					// if end happened before close but the socket didn't emit an error, do it now
+					if (response && hasDataListener && !hadError && !(signal && signal.aborted)) {
+						const err = new Error('Premature close');
+						err.code = 'ERR_STREAM_PREMATURE_CLOSE';
+						response.body.emit('error', err);
+					}
+				});
+			});
+		}
 
 		req.on('response', function (res) {
 			clearTimeout(reqTimeout);
@@ -6262,7 +6595,7 @@ function fetch(url, opts) {
 							size: request.size
 						};
 
-						if (!isDomainOrSubdomain(request.url, locationURL)) {
+						if (!isDomainOrSubdomain(request.url, locationURL) || !isSameProtocol(request.url, locationURL)) {
 							for (const name of ['authorization', 'www-authenticate', 'cookie', 'cookie2']) {
 								requestOpts.headers.delete(name);
 							}
@@ -6355,6 +6688,13 @@ function fetch(url, opts) {
 					response = new Response(body, response_options);
 					resolve(response);
 				});
+				raw.on('end', function () {
+					// some old IIS servers return zero-length OK deflate responses, so 'data' is never emitted.
+					if (!response) {
+						response = new Response(body, response_options);
+						resolve(response);
+					}
+				});
 				return;
 			}
 
@@ -6374,6 +6714,44 @@ function fetch(url, opts) {
 		writeToStream(req, request);
 	});
 }
+function fixResponseChunkedTransferBadEnding(request, errorCallback) {
+	let socket;
+
+	request.on('socket', function (s) {
+		socket = s;
+	});
+
+	request.on('response', function (response) {
+		const headers = response.headers;
+
+		if (headers['transfer-encoding'] === 'chunked' && !headers['content-length']) {
+			response.once('close', function (hadError) {
+				// tests for socket presence, as in some situations the
+				// the 'socket' event is not triggered for the request
+				// (happens in deno), avoids `TypeError`
+				// if a data listener is still present we didn't end cleanly
+				const hasDataListener = socket && socket.listenerCount('data') > 0;
+
+				if (hasDataListener && !hadError) {
+					const err = new Error('Premature close');
+					err.code = 'ERR_STREAM_PREMATURE_CLOSE';
+					errorCallback(err);
+				}
+			});
+		}
+	});
+}
+
+function destroyStream(stream, err) {
+	if (stream.destroy) {
+		stream.destroy(err);
+	} else {
+		// node < 8
+		stream.emit('error', err);
+		stream.end();
+	}
+}
+
 /**
  * Redirect code matching
  *
@@ -14900,7 +15278,7 @@ function dataUriToBuffer(uri) {
         if (meta[i] === 'base64') {
             base64 = true;
         }
-        else {
+        else if (meta[i]) {
             typeFull += `;${meta[i]}`;
             if (meta[i].indexOf('charset=') === 0) {
                 charset = meta[i].substring(8);
@@ -15875,6 +16253,25 @@ class Response extends Body {
 		return response;
 	}
 
+	static json(data = undefined, init = {}) {
+		const body = JSON.stringify(data);
+
+		if (body === undefined) {
+			throw new TypeError('data is not JSON serializable');
+		}
+
+		const headers = new Headers(init && init.headers);
+
+		if (!headers.has('content-type')) {
+			headers.set('content-type', 'application/json');
+		}
+
+		return new Response(body, {
+			...init,
+			headers
+		});
+	}
+
 	get [Symbol.toStringTag]() {
 		return 'Response';
 	}
@@ -16535,10 +16932,6 @@ const getNodeRequestOptions = request => {
 	let {agent} = request;
 	if (typeof agent === 'function') {
 		agent = agent(parsedURL);
-	}
-
-	if (!headers.has('Connection') && !agent) {
-		headers.set('Connection', 'close');
 	}
 
 	// HTTP-network fetch step 4.2
