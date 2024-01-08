@@ -1,9 +1,9 @@
 import * as core from '@actions/core';
 
-import {existsSync, readFileSync} from 'fs';
-import {join} from 'path';
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 
-import {MissionReport} from '..';
+import { MissionReport } from '..';
 
 const regex_desc_name = /^OnLoadName = "(.+?)";$/m;
 const regex_desc_summary = /^OnLoadMission = "(.+?)";$/m;
@@ -65,14 +65,6 @@ export function check3(name: string): MissionReport {
         );
       }
 
-      // Mission - Check Respawn
-      if (!mission.includes('name="respawn"')) {
-        core.error(`${name} - mission.sqm: Respawn not found`);
-        report.errors.push(
-          `[Respawn not found](https://github.com/SynixeContractors/MissionTemplate#setup-base)`
-        );
-      }
-
       // Mission - Check Shop
       if (!mission.includes('property="crate_client_gear_attribute_shop"')) {
         core.error(`${name} - mission.sqm: Shop not found`);
@@ -106,22 +98,6 @@ export function check3(name: string): MissionReport {
           `[No playable units found](https://github.com/SynixeContractors/MissionTemplate#setup-the-players)`
         );
       }
-
-      // Mission - Check spawn_land
-      if (!mission.includes('name="spawn_land"')) {
-        core.error(`${name} - mission.sqm: \`spawn_land\` not found`);
-        report.errors.push(
-          `[spawn_land not found](https://github.com/SynixeContractors/MissionTemplate#setup-vehicle-spawns)`
-        );
-      }
-
-      // Mission - Check spawn_thing
-      if (!mission.includes('name="spawn_thing"')) {
-        core.error(`${name} - mission.sqm: \`spawn_thing\` not found`);
-        report.errors.push(
-          `[spawn_thing not found](https://github.com/SynixeContractors/MissionTemplate#setup-vehicle-spawns)`
-        );
-      }
     } else {
       core.error(`${name} - mission.sqm: Binarized`);
       report.errors.push(
@@ -130,7 +106,7 @@ export function check3(name: string): MissionReport {
     }
   }
 
-  ['employer', 'mission', 'objectives', 'situation'].forEach(title => {
+  ['employer', 'mission', 'objectives', 'situation', 'restrictions'].forEach(title => {
     // Check briefing.sqf
     const briefing_path = join(
       'contracts',
@@ -139,15 +115,14 @@ export function check3(name: string): MissionReport {
       'briefing',
       `${title}.html`
     );
-    if (!existsSync(briefing_path)) {
+    if (!existsSync(briefing_path) && title !== 'restrictions') {
       core.error(`${name} - ${title}.html not found`);
+      return;
     }
-    if (existsSync(briefing_path)) {
-      const briefing = readFileSync(briefing_path, 'utf8');
-      if (briefing.includes('INSERT')) {
-        core.error(`${name} - ${title}.html: Not edited`);
-        report.errors.push(`${title}.html: Not edited`);
-      }
+    const briefing = readFileSync(briefing_path, 'utf8');
+    if (briefing.includes('INSERT')) {
+      core.error(`${name} - ${title}.html: Not edited`);
+      report.errors.push(`${title}.html: Not edited`);
     }
   });
   return report;
