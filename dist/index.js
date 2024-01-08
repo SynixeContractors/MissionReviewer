@@ -565,10 +565,10 @@ function check3(name) {
             report.errors.push('[mission.sqm: Binarized](https://github.com/SynixeContractors/Missions#create-a-new-mission)');
         }
     }
-    ['employer', 'mission', 'objectives', 'situation', 'restrictions'].forEach(title => {
+    ['mission', 'objectives', 'situation'].forEach(title => {
         // Check briefing.sqf
         const briefing_path = (0, path_1.join)('contracts', name, 'edit_me', 'briefing', `${title}.html`);
-        if (!(0, fs_1.existsSync)(briefing_path) && title !== 'restrictions') {
+        if (!(0, fs_1.existsSync)(briefing_path)) {
             core.error(`${name} - ${title}.html not found`);
             return;
         }

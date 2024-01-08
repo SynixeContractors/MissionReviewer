@@ -106,7 +106,7 @@ export function check3(name: string): MissionReport {
     }
   }
 
-  ['employer', 'mission', 'objectives', 'situation', 'restrictions'].forEach(title => {
+  ['mission', 'objectives', 'situation'].forEach(title => {
     // Check briefing.sqf
     const briefing_path = join(
       'contracts',
@@ -115,7 +115,7 @@ export function check3(name: string): MissionReport {
       'briefing',
       `${title}.html`
     );
-    if (!existsSync(briefing_path) && title !== 'restrictions') {
+    if (!existsSync(briefing_path)) {
       core.error(`${name} - ${title}.html not found`);
       return;
     }
