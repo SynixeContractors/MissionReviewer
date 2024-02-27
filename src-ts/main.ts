@@ -27,7 +27,6 @@ async function run(): Promise<void> {
     false,
     false
   );
-  // debug list all files in root
   fs.readdirSync('.').forEach(file => {
     core.debug(file);
   });
@@ -42,6 +41,7 @@ async function run(): Promise<void> {
       core.info(stdout);
     });
   }
+  core.addPath('.');
 
   let files: string[] = [];
   if (github.context.payload.pull_request) {
@@ -51,7 +51,7 @@ async function run(): Promise<void> {
     core.debug(files.toString());
   }
 
-  exec('./missionreviewer', (error, stdout, stderr) => {
+  exec('missionreviewer', (error, stdout, stderr) => {
     if (error) {
       console.error(`exec error: ${error}`);
       return;
