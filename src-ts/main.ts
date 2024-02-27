@@ -1,4 +1,4 @@
-import {exec} from 'child_process';
+import {exec, execSync} from 'child_process';
 import * as fs from 'fs';
 
 import * as core from '@actions/core';
@@ -31,19 +31,7 @@ async function run(): Promise<void> {
     core.debug(file);
   });
   if (!isWin) {
-    core.info('Setting permissions for missionreviewer');
-    exec(
-      `chmod +x ${process.cwd()}/missionreviewer`,
-      (error, stdout, stderr) => {
-        if (error) {
-          core.setFailed(error.message);
-        }
-        if (stderr) {
-          core.setFailed(stderr);
-        }
-        core.info(stdout);
-      }
-    );
+    execSync(`chmod +x ${process.cwd()}/missionreviewer`);
   }
   core.addPath(`${process.cwd()}`);
 

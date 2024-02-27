@@ -188,16 +188,7 @@ function run() {
             core.debug(file);
         });
         if (!isWin) {
-            core.info('Setting permissions for missionreviewer');
-            (0, child_process_1.exec)(`chmod +x ${process.cwd()}/missionreviewer`, (error, stdout, stderr) => {
-                if (error) {
-                    core.setFailed(error.message);
-                }
-                if (stderr) {
-                    core.setFailed(stderr);
-                }
-                core.info(stdout);
-            });
+            (0, child_process_1.execSync)(`chmod +x ${process.cwd()}/missionreviewer`);
         }
         core.addPath(`${process.cwd()}`);
         let files = [];
