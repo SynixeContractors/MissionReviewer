@@ -118,11 +118,13 @@ async function run(): Promise<void> {
         if (approved) {
           options.event = 'APPROVE';
         } else {
-          let body =
-            'Mission Reviewer: Found issues with the following files:\n';
+          let body = 'Found issues with the following files:\n';
           for (const path in messages) {
             body += `* ${path}\n`;
-            for (const message of messages[path]) {
+            let dedup = messages[path].filter((message, index) => {
+              return messages[path].indexOf(message) === index;
+            });
+            for (const message of dedup) {
               body += `  * ${message}\n`;
             }
           }
