@@ -31,9 +31,8 @@ async function run(): Promise<void> {
     core.debug(file);
   });
   if (!isWin) {
-    execSync(`chmod +x ${process.cwd()}/missionreviewer`);
+    execSync(`chmod +x ${process.cwd()}/missionreviewer/missionreviewer`);
   }
-  core.addPath(`${process.cwd()}`);
 
   let files: string[] = [];
   if (github.context.payload.pull_request) {
@@ -44,7 +43,7 @@ async function run(): Promise<void> {
   }
 
   exec(
-    `${process.cwd()}/${isWin ? 'missionreviewer.exe' : 'missionreviewer'}`,
+    `${process.cwd()}/missionreviewer/${isWin ? 'missionreviewer.exe' : 'missionreviewer'}`,
     async (error, stdout, stderr) => {
       if (error) {
         console.error(`exec error: ${error}`);

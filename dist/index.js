@@ -188,15 +188,14 @@ function run() {
             core.debug(file);
         });
         if (!isWin) {
-            (0, child_process_1.execSync)(`chmod +x ${process.cwd()}/missionreviewer`);
+            (0, child_process_1.execSync)(`chmod +x ${process.cwd()}/missionreviewer/missionreviewer`);
         }
-        core.addPath(`${process.cwd()}`);
         let files = [];
         if (github.context.payload.pull_request) {
             files = yield new files_1.FileService(core.getInput('GITHUB_TOKEN', { required: true })).getFiles();
             core.debug(files.toString());
         }
-        (0, child_process_1.exec)(`${process.cwd()}/${isWin ? 'missionreviewer.exe' : 'missionreviewer'}`, (error, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+        (0, child_process_1.exec)(`${process.cwd()}/missionreviewer/${isWin ? 'missionreviewer.exe' : 'missionreviewer'}`, (error, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
             if (error) {
                 console.error(`exec error: ${error}`);
                 return;
