@@ -188,6 +188,7 @@ function run() {
             core.debug(file);
         });
         if (!isWin) {
+            core.info('Setting permissions for missionreviewer');
             (0, child_process_1.exec)('chmod +x ./missionreviewer', (error, stdout, stderr) => {
                 if (error) {
                     core.setFailed(error.message);
@@ -204,7 +205,7 @@ function run() {
             files = yield new files_1.FileService(core.getInput('GITHUB_TOKEN', { required: true })).getFiles();
             core.debug(files.toString());
         }
-        (0, child_process_1.exec)('missionreviewer', (error, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+        (0, child_process_1.exec)(`${isWin ? 'missionreviewer.exe' : './missionreviewer'}`, (error, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
             if (error) {
                 console.error(`exec error: ${error}`);
                 return;
@@ -262,7 +263,8 @@ function run() {
                 });
                 const brodskycomments = comments.data.filter(comment => {
                     if (comment.user) {
-                        return (comment.user.login === 'SynixeBrodsky' && comment.state === 'APPROVED');
+                        return (comment.user.login === 'SynixeBrodsky' &&
+                            comment.state === 'APPROVED');
                     }
                     else {
                         return false;
