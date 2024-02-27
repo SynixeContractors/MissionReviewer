@@ -281,7 +281,7 @@ function run() {
                         return false;
                     }
                 });
-                if (!approved || (approved && brodskycomments.length == 0)) {
+                if (!approved || brodskycomments[brodskycomments.length - 1].state !== 'APPROVE') {
                     octo.rest.pulls.createReview(options);
                 }
             }
