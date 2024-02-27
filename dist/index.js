@@ -184,6 +184,10 @@ function run() {
                 ? asset.name === 'missionreviewer.exe'
                 : asset.name === 'missionreviewer';
         }, false, false);
+        // debug list all files in root
+        fs.readdirSync('.').forEach(file => {
+            core.debug(file);
+        });
         if (!isWin) {
             (0, child_process_1.exec)('chmod +x missionreviewer', (error, stdout, stderr) => {
                 if (error) {

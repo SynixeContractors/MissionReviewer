@@ -27,6 +27,10 @@ async function run(): Promise<void> {
     false,
     false
   );
+  // debug list all files in root
+  fs.readdirSync('.').forEach(file => {
+    core.debug(file);
+  });
   if (!isWin) {
     exec('chmod +x missionreviewer', (error, stdout, stderr) => {
       if (error) {
