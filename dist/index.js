@@ -216,6 +216,7 @@ function run() {
             for (const annotation of annotations) {
                 switch (annotation.level) {
                     case 'error':
+                        core.debug(`${annotation.path} - ${files.some(f => f.endsWith(annotation.path))}`);
                         core.error(annotation.message, (0, annotations_1.annotationParams)(annotation));
                         if (annotation.path &&
                             files.some(f => f.endsWith(annotation.path))) {

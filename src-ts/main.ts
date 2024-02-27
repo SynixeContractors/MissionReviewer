@@ -66,6 +66,9 @@ async function run(): Promise<void> {
       for (const annotation of annotations) {
         switch (annotation.level) {
           case 'error':
+            core.debug(
+              `${annotation.path} - ${files.some(f => f.endsWith(annotation.path))}`
+            );
             core.error(annotation.message, annotationParams(annotation));
             if (
               annotation.path &&
