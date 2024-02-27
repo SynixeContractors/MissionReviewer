@@ -67,12 +67,12 @@ async function run(): Promise<void> {
         switch (annotation.level) {
           case 'error':
             core.debug(
-              `${annotation.path} - ${files.some(f => f == annotation.path)}`
+              `${annotation.path} - ${files.some(f => f.includes(annotation.path))}`
             );
             core.error(annotation.message, annotationParams(annotation));
             if (
               annotation.path &&
-              files.some(f => f.endsWith(annotation.path))
+              files.some(f => f.includes(annotation.path))
             ) {
               approved = false;
             }
