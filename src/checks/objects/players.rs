@@ -97,7 +97,7 @@ impl ObjectCheck for PlayerCheck {
         }
     }
 
-    fn done(&self, dir: &Path) -> Vec<Annotation> {
+    fn done(&self, _: &Path) -> Vec<Annotation> {
         let mut messages = self.messages.clone();
         if self.count != self.expected {
             messages.push(Annotation::new(

@@ -8,6 +8,7 @@ import {downloadRelease} from '@terascope/fetch-github-release';
 import {FileService} from './files';
 import {annotationParams, parseAnnotation} from './annotations';
 
+const isWin = process.platform === 'win32';
 const file = 'missionreviewer.log';
 
 async function run(): Promise<void> {
@@ -19,21 +20,27 @@ async function run(): Promise<void> {
       return release.prerelease === false;
     },
     asset => {
-      return asset.name === 'missionreviewer';
+      return isWin
+        ? asset.name === 'windows-x64.zip'
+        : asset.name === 'linux-x64.zip';
     },
     false,
     false
   );
-  exec('chmod +x missionreviewer/missionreviewer', (error, stdout, stderr) => {
-    if (error) {
-      core.setFailed(error.message);
-    }
-    if (stderr) {
-      core.setFailed(stderr);
-    }
-    core.info(stdout);
-  });
-  core.addPath(`${process.cwd()}/missionreviewer`);
+  if (!isWin) {
+    exec(
+      'chmod +x missionreviewer/missionreviewer',
+      (error, stdout, stderr) => {
+        if (error) {
+          core.setFailed(error.message);
+        }
+        if (stderr) {
+          core.setFailed(stderr);
+        }
+        core.info(stdout);
+      }
+    );
+  }
 
   let files: string[] = [];
   if (github.context.payload.pull_request) {

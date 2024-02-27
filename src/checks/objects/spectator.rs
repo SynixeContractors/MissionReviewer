@@ -29,8 +29,8 @@ impl Default for RequireSpectator {
 impl ObjectCheck for RequireSpectator {
     fn observe(
         &mut self,
-        mission: (&Processed, &Config),
-        dir: &Path,
+        _: (&Processed, &Config),
+        _: &Path,
         class: &hemtt_config::Class,
         data_type: &str,
     ) {

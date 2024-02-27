@@ -173,24 +173,28 @@ const github = __importStar(__nccwpck_require__(5438));
 const fetch_github_release_1 = __nccwpck_require__(4676);
 const files_1 = __nccwpck_require__(1743);
 const annotations_1 = __nccwpck_require__(5598);
+const isWin = process.platform === 'win32';
 const file = 'missionreviewer.log';
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         yield (0, fetch_github_release_1.downloadRelease)('SynixeContractors', 'MissionReviewer', 'missionreviewer', release => {
             return release.prerelease === false;
         }, asset => {
-            return asset.name === 'missionreviewer';
+            return isWin
+                ? asset.name === 'windows-x64.zip'
+                : asset.name === 'linux-x64.zip';
         }, false, false);
-        (0, child_process_1.exec)('chmod +x missionreviewer/missionreviewer', (error, stdout, stderr) => {
-            if (error) {
-                core.setFailed(error.message);
-            }
-            if (stderr) {
-                core.setFailed(stderr);
-            }
-            core.info(stdout);
-        });
-        core.addPath(`${process.cwd()}/missionreviewer`);
+        if (!isWin) {
+            (0, child_process_1.exec)('chmod +x missionreviewer/missionreviewer', (error, stdout, stderr) => {
+                if (error) {
+                    core.setFailed(error.message);
+                }
+                if (stderr) {
+                    core.setFailed(stderr);
+                }
+                core.info(stdout);
+            });
+        }
         let files = [];
         if (github.context.payload.pull_request) {
             files = yield new files_1.FileService(core.getInput('GITHUB_TOKEN', { required: true })).getFiles();

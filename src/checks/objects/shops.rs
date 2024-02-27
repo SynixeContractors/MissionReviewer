@@ -55,7 +55,7 @@ impl Default for ShopCheck {
 impl ObjectCheck for ShopCheck {
     fn observe(
         &mut self,
-        mission: (&Processed, &Config),
+        _: (&Processed, &Config),
         dir: &Path,
         class: &hemtt_config::Class,
         data_type: &str,
