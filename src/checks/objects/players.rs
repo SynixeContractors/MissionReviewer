@@ -97,12 +97,12 @@ impl ObjectCheck for PlayerCheck {
         }
     }
 
-    fn done(&self, _: &Path) -> Vec<Annotation> {
+    fn done(&self, dir: &Path) -> Vec<Annotation> {
         let mut messages = self.messages.clone();
         if self.count != self.expected {
             messages.push(Annotation::new(
                 None,
-                "mission.sqm".to_string(),
+                dir.join("mission.sqm").display().to_string(),
                 0..0,
                 format!("Expected {} players, found {}", self.expected, self.count),
                 Level::Error,
