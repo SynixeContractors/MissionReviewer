@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, path::PathBuf};
 
 use hemtt_common::reporting::Processed;
 
@@ -51,7 +51,25 @@ impl Annotation {
                 }
             }
         }
-        let content = std::fs::read_to_string(&path).unwrap();
+        let content = if PathBuf::from(&path).is_file() {
+            match std::fs::read_to_string(&path) {
+                Ok(content) => content,
+                Err(e) => {
+                    panic!("failed to read {}: {}", path, e);
+                }
+            }
+        } else {
+            return Self {
+                path,
+                start_line: 1,
+                end_line: 1,
+                start_column: 1,
+                end_column: 1,
+                level,
+                message,
+                title: String::new(),
+            };
+        };
         let mut start_line = 1;
         let mut start_column = 1;
         let mut end_line = 1;
