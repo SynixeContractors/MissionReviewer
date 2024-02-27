@@ -253,7 +253,6 @@ function run() {
                     event: 'COMMENT'
                 };
                 if (approved) {
-                    options.body = 'Mission Reviewer: All checks passed!';
                     options.event = 'APPROVE';
                 }
                 else {
@@ -281,7 +280,8 @@ function run() {
                         return false;
                     }
                 });
-                if (!approved || brodskycomments[brodskycomments.length - 1].state !== 'APPROVE') {
+                if (!approved ||
+                    brodskycomments[brodskycomments.length - 1].state !== 'APPROVE') {
                     octo.rest.pulls.createReview(options);
                 }
             }

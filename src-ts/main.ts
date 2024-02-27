@@ -116,7 +116,6 @@ async function run(): Promise<void> {
           event: 'COMMENT'
         };
         if (approved) {
-          options.body = 'Mission Reviewer: All checks passed!';
           options.event = 'APPROVE';
         } else {
           let body =
