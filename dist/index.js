@@ -181,11 +181,11 @@ function run() {
             return release.prerelease === false;
         }, asset => {
             return isWin
-                ? asset.name === 'windows-x64.zip'
-                : asset.name === 'linux-x64.zip';
+                ? asset.name === 'missionreviewer.exe'
+                : asset.name === 'missionreviewer';
         }, false, false);
         if (!isWin) {
-            (0, child_process_1.exec)('chmod +x missionreviewer/missionreviewer', (error, stdout, stderr) => {
+            (0, child_process_1.exec)('chmod +x missionreviewer', (error, stdout, stderr) => {
                 if (error) {
                     core.setFailed(error.message);
                 }

@@ -21,25 +21,22 @@ async function run(): Promise<void> {
     },
     asset => {
       return isWin
-        ? asset.name === 'windows-x64.zip'
-        : asset.name === 'linux-x64.zip';
+        ? asset.name === 'missionreviewer.exe'
+        : asset.name === 'missionreviewer';
     },
     false,
     false
   );
   if (!isWin) {
-    exec(
-      'chmod +x missionreviewer/missionreviewer',
-      (error, stdout, stderr) => {
-        if (error) {
-          core.setFailed(error.message);
-        }
-        if (stderr) {
-          core.setFailed(stderr);
-        }
-        core.info(stdout);
+    exec('chmod +x missionreviewer', (error, stdout, stderr) => {
+      if (error) {
+        core.setFailed(error.message);
       }
-    );
+      if (stderr) {
+        core.setFailed(stderr);
+      }
+      core.info(stdout);
+    });
   }
 
   let files: string[] = [];
