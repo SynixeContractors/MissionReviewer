@@ -31,7 +31,7 @@ async function run(): Promise<void> {
     core.debug(file);
   });
   if (!isWin) {
-    exec('chmod +x missionreviewer', (error, stdout, stderr) => {
+    exec('chmod +x ./missionreviewer', (error, stdout, stderr) => {
       if (error) {
         core.setFailed(error.message);
       }
