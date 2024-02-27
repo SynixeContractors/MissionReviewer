@@ -32,15 +32,18 @@ async function run(): Promise<void> {
   });
   if (!isWin) {
     core.info('Setting permissions for missionreviewer');
-    exec('chmod +x ./missionreviewer', (error, stdout, stderr) => {
-      if (error) {
-        core.setFailed(error.message);
+    exec(
+      `chmod +x ${process.cwd()}/missionreviewer`,
+      (error, stdout, stderr) => {
+        if (error) {
+          core.setFailed(error.message);
+        }
+        if (stderr) {
+          core.setFailed(stderr);
+        }
+        core.info(stdout);
       }
-      if (stderr) {
-        core.setFailed(stderr);
-      }
-      core.info(stdout);
-    });
+    );
   }
   core.addPath(`${process.cwd()}`);
 

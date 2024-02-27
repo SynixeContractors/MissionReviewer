@@ -189,7 +189,7 @@ function run() {
         });
         if (!isWin) {
             core.info('Setting permissions for missionreviewer');
-            (0, child_process_1.exec)('chmod +x ./missionreviewer', (error, stdout, stderr) => {
+            (0, child_process_1.exec)(`chmod +x ${process.cwd()}/missionreviewer`, (error, stdout, stderr) => {
                 if (error) {
                     core.setFailed(error.message);
                 }
