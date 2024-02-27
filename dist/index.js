@@ -213,6 +213,7 @@ function run() {
                 .map(annotations_1.parseAnnotation);
             core.info(`Found ${annotations.length} annotations.`);
             let approved = true;
+            let messages = {};
             for (const annotation of annotations) {
                 switch (annotation.level) {
                     case 'error':
@@ -221,10 +222,21 @@ function run() {
                         if (annotation.path &&
                             files.some(f => f.includes(annotation.path))) {
                             approved = false;
+                            messages[annotation.path] = [
+                                ...(messages[annotation.path] || []),
+                                annotation.message
+                            ];
                         }
                         break;
                     case 'warning':
                         core.warning(annotation.message, (0, annotations_1.annotationParams)(annotation));
+                        if (annotation.path &&
+                            files.some(f => f.includes(annotation.path))) {
+                            messages[annotation.path] = [
+                                ...(messages[annotation.path] || []),
+                                annotation.message
+                            ];
+                        }
                         break;
                     default:
                         core.notice(annotation.message, (0, annotations_1.annotationParams)(annotation));
@@ -245,7 +257,14 @@ function run() {
                     options.event = 'APPROVE';
                 }
                 else {
-                    options.body = 'Mission Reviewer: Some checks failed.';
+                    let body = 'Mission Reviewer: Found issues with the following files:\n';
+                    for (const path in messages) {
+                        body += `* ${path}\n`;
+                        for (const message of messages[path]) {
+                            body += `  * ${message}\n`;
+                        }
+                    }
+                    options.body = body;
                     options.event = 'REQUEST_CHANGES';
                 }
                 const comments = yield octo.rest.pulls.listReviews({
