@@ -205,7 +205,7 @@ function run() {
             files = yield new files_1.FileService(core.getInput('GITHUB_TOKEN', { required: true })).getFiles();
             core.debug(files.toString());
         }
-        (0, child_process_1.exec)(`${isWin ? 'missionreviewer.exe' : './missionreviewer'}`, (error, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+        (0, child_process_1.exec)(`${process.cwd()}/${isWin ? 'missionreviewer.exe' : 'missionreviewer'}`, (error, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
             if (error) {
                 console.error(`exec error: ${error}`);
                 return;
@@ -227,7 +227,8 @@ function run() {
                 switch (annotation.level) {
                     case 'error':
                         core.error(annotation.message, (0, annotations_1.annotationParams)(annotation));
-                        if (annotation.path && files.some(f => f.endsWith(annotation.path))) {
+                        if (annotation.path &&
+                            files.some(f => f.endsWith(annotation.path))) {
                             approved = false;
                         }
                         break;

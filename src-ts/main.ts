@@ -53,7 +53,7 @@ async function run(): Promise<void> {
   }
 
   exec(
-    `${isWin ? 'missionreviewer.exe' : './missionreviewer'}`,
+    `${process.cwd()}/${isWin ? 'missionreviewer.exe' : 'missionreviewer'}`,
     async (error, stdout, stderr) => {
       if (error) {
         console.error(`exec error: ${error}`);
