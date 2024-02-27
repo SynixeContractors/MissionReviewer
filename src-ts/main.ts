@@ -18,7 +18,7 @@ async function run(): Promise<void> {
     core.debug(files.toString());
   }
 
-  exec('../dist/missionreviewer', (error, stdout, stderr) => {
+  exec('dist/missionreviewer', (error, stdout, stderr) => {
     if (error) {
       console.error(`exec error: ${error}`);
       return;
