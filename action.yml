@@ -1,0 +1,10 @@
+name: 'Mission Reviewer'
+description: 'Review missions for basic mistakes'
+author: 'Synixe Contractors'
+inputs:
+  GITHUB_TOKEN:
+    required: true
+    description: 'github token'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

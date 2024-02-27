@@ -1,0 +1,13 @@
+[package]
+name = "missionreviewer"
+version = "0.1.0"
+edition = "2021"
+authors = ["Synixe Contractors"]
+
+[dependencies]
+hemtt-config = { git = "https://github.com/brettmayson/hemtt" }
+hemtt-preprocessor = { git = "https://github.com/brettmayson/hemtt" }
+hemtt-common = { git = "https://github.com/brettmayson/hemtt" }
+
+rayon = "1.8.1"
+walkdir = "2.4.0"

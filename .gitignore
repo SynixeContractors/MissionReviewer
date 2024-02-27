@@ -1,0 +1,9 @@
+missions/
+target/
+
+# node
+node_modules/
+
+# Ignore built ts files
+__tests__/runner/*
+lib/**/*
