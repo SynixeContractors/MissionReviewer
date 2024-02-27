@@ -204,7 +204,7 @@ function run() {
             files = yield new files_1.FileService(core.getInput('GITHUB_TOKEN', { required: true })).getFiles();
             core.debug(files.toString());
         }
-        (0, child_process_1.exec)('missionreviewer', (error, stdout, stderr) => {
+        (0, child_process_1.exec)('./missionreviewer', (error, stdout, stderr) => {
             if (error) {
                 console.error(`exec error: ${error}`);
                 return;
