@@ -184,12 +184,11 @@ function run() {
                 ? asset.name === 'missionreviewer.exe'
                 : asset.name === 'missionreviewer';
         }, false, false);
-        // debug list all files in root
         fs.readdirSync('.').forEach(file => {
             core.debug(file);
         });
         if (!isWin) {
-            (0, child_process_1.exec)('chmod +x missionreviewer', (error, stdout, stderr) => {
+            (0, child_process_1.exec)('chmod +x ./missionreviewer', (error, stdout, stderr) => {
                 if (error) {
                     core.setFailed(error.message);
                 }
@@ -199,81 +198,81 @@ function run() {
                 core.info(stdout);
             });
         }
-        core.addPath('.');
+        core.addPath(`${process.cwd()}`);
         let files = [];
         if (github.context.payload.pull_request) {
             files = yield new files_1.FileService(core.getInput('GITHUB_TOKEN', { required: true })).getFiles();
             core.debug(files.toString());
         }
-        (0, child_process_1.exec)('missionreviewer', (error, stdout, stderr) => {
+        (0, child_process_1.exec)('missionreviewer', (error, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
             if (error) {
                 console.error(`exec error: ${error}`);
                 return;
             }
             console.log(`stdout: ${stdout}`);
             console.error(`stderr: ${stderr}`);
-        });
-        if (!fs.existsSync(file)) {
-            core.info('No annotations file found.');
-            return;
-        }
-        const data = fs.readFileSync(file, 'utf8');
-        const lines = data.split('\n');
-        const annotations = lines
-            .filter(line => line.length > 0)
-            .map(annotations_1.parseAnnotation);
-        core.info(`Found ${annotations.length} annotations.`);
-        let approved = true;
-        for (const annotation of annotations) {
-            switch (annotation.level) {
-                case 'error':
-                    core.error(annotation.message, (0, annotations_1.annotationParams)(annotation));
-                    if (annotation.path && files.some(f => f.endsWith(annotation.path))) {
-                        approved = false;
-                    }
-                    break;
-                case 'warning':
-                    core.warning(annotation.message, (0, annotations_1.annotationParams)(annotation));
-                    break;
-                default:
-                    core.notice(annotation.message, (0, annotations_1.annotationParams)(annotation));
-                    break;
+            if (!fs.existsSync(file)) {
+                core.info('No annotations file found.');
+                return;
             }
-        }
-        if (github.context.payload.pull_request) {
-            const octo = github.getOctokit(core.getInput('GITHUB_TOKEN'));
-            let options = {
-                owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
-                pull_number: github.context.payload.pull_request.number,
-                body: '',
-                event: 'COMMENT'
-            };
-            if (approved) {
-                options.body = 'Mission Reviewer: All checks passed!';
-                options.event = 'APPROVE';
+            const data = fs.readFileSync(file, 'utf8');
+            const lines = data.split('\n');
+            const annotations = lines
+                .filter(line => line.length > 0)
+                .map(annotations_1.parseAnnotation);
+            core.info(`Found ${annotations.length} annotations.`);
+            let approved = true;
+            for (const annotation of annotations) {
+                switch (annotation.level) {
+                    case 'error':
+                        core.error(annotation.message, (0, annotations_1.annotationParams)(annotation));
+                        if (annotation.path && files.some(f => f.endsWith(annotation.path))) {
+                            approved = false;
+                        }
+                        break;
+                    case 'warning':
+                        core.warning(annotation.message, (0, annotations_1.annotationParams)(annotation));
+                        break;
+                    default:
+                        core.notice(annotation.message, (0, annotations_1.annotationParams)(annotation));
+                        break;
+                }
             }
-            else {
-                options.body = 'Mission Reviewer: Some checks failed.';
-                options.event = 'REQUEST_CHANGES';
-            }
-            const comments = yield octo.rest.pulls.listReviews({
-                owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
-                pull_number: github.context.payload.pull_request.number
-            });
-            const brodskycomments = comments.data.filter(comment => {
-                if (comment.user) {
-                    return (comment.user.login === 'SynixeBrodsky' && comment.state === 'APPROVED');
+            if (github.context.payload.pull_request) {
+                const octo = github.getOctokit(core.getInput('GITHUB_TOKEN'));
+                let options = {
+                    owner: github.context.repo.owner,
+                    repo: github.context.repo.repo,
+                    pull_number: github.context.payload.pull_request.number,
+                    body: '',
+                    event: 'COMMENT'
+                };
+                if (approved) {
+                    options.body = 'Mission Reviewer: All checks passed!';
+                    options.event = 'APPROVE';
                 }
                 else {
-                    return false;
+                    options.body = 'Mission Reviewer: Some checks failed.';
+                    options.event = 'REQUEST_CHANGES';
                 }
-            });
-            if (!approved || (approved && brodskycomments.length == 0)) {
-                octo.rest.pulls.createReview(options);
+                const comments = yield octo.rest.pulls.listReviews({
+                    owner: github.context.repo.owner,
+                    repo: github.context.repo.repo,
+                    pull_number: github.context.payload.pull_request.number
+                });
+                const brodskycomments = comments.data.filter(comment => {
+                    if (comment.user) {
+                        return (comment.user.login === 'SynixeBrodsky' && comment.state === 'APPROVED');
+                    }
+                    else {
+                        return false;
+                    }
+                });
+                if (!approved || (approved && brodskycomments.length == 0)) {
+                    octo.rest.pulls.createReview(options);
+                }
             }
-        }
+        }));
     });
 }
 run();
