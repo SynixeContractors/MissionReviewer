@@ -3,6 +3,7 @@ import * as fs from 'fs';
 
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import {downloadRelease} from '@terascope/fetch-github-release';
 
 import {FileService} from './files';
 import {annotationParams, parseAnnotation} from './annotations';
@@ -10,6 +11,30 @@ import {annotationParams, parseAnnotation} from './annotations';
 const file = 'missionreviewer.log';
 
 async function run(): Promise<void> {
+  await downloadRelease(
+    'SynixeContractors',
+    'MissionReviewer',
+    'missionreviewer',
+    release => {
+      return release.prerelease === false;
+    },
+    asset => {
+      return asset.name === 'missionreviewer';
+    },
+    false,
+    false
+  );
+  exec('chmod +x missionreviewer/missionreviewer', (error, stdout, stderr) => {
+    if (error) {
+      core.setFailed(error.message);
+    }
+    if (stderr) {
+      core.setFailed(stderr);
+    }
+    core.info(stdout);
+  });
+  core.addPath(`${process.cwd()}/missionreviewer`);
+
   let files: string[] = [];
   if (github.context.payload.pull_request) {
     files = await new FileService(
@@ -18,7 +43,7 @@ async function run(): Promise<void> {
     core.debug(files.toString());
   }
 
-  exec('dist/missionreviewer', (error, stdout, stderr) => {
+  exec('missionreviewer', (error, stdout, stderr) => {
     if (error) {
       console.error(`exec error: ${error}`);
       return;
