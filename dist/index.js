@@ -284,6 +284,7 @@ function run() {
                     }
                 });
                 if (!approved ||
+                    brodskycomments.length == 0 ||
                     brodskycomments[brodskycomments.length - 1].state !== 'APPROVE') {
                     octo.rest.pulls.createReview(options);
                 }
