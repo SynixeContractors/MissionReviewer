@@ -46,14 +46,14 @@ async function run(): Promise<void> {
     `${process.cwd()}/missionreviewer/${isWin ? 'missionreviewer.exe' : 'missionreviewer'}`,
     async (error, stdout, stderr) => {
       if (error) {
-        console.error(`exec error: ${error}`);
+        core.error(`exec error: ${error}`);
         return;
       }
       console.log(`stdout: ${stdout}`);
       console.error(`stderr: ${stderr}`);
 
       if (!fs.existsSync(file)) {
-        core.info('No annotations file found.');
+        core.warning('No annotations file found.');
         return;
       }
       const data = fs.readFileSync(file, 'utf8');
