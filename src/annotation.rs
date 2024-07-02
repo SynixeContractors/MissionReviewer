@@ -55,7 +55,17 @@ impl Annotation {
             match std::fs::read_to_string(&path) {
                 Ok(content) => content,
                 Err(e) => {
-                    panic!("failed to read {}: {}", path, e);
+                    println!("failed to read {}: {}", path, e);
+                    return Self {
+                        path,
+                        start_line: 1,
+                        end_line: 1,
+                        start_column: 1,
+                        end_column: 1,
+                        level,
+                        message,
+                        title: String::new(),
+                    };
                 }
             }
         } else {
