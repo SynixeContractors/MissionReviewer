@@ -1,11 +1,12 @@
 use std::path::PathBuf;
 
-use hemtt_common::{
-    reporting::{Processed, WorkspaceFiles},
-    workspace::{LayerType, Workspace},
-};
+use hemtt_common::project::hemtt::PDriveOption;
 use hemtt_config::{ConfigReport, Number, Property, Value};
 use hemtt_preprocessor::Processor;
+use hemtt_workspace::{
+    reporting::{Processed, WorkspaceFiles},
+    LayerType, Workspace,
+};
 
 use crate::{
     annotation::{Annotation, Level},
@@ -22,13 +23,13 @@ pub fn check(dir: &PathBuf) -> Result<Vec<Annotation>, String> {
     let (mission_processed, mission) = match read_mission(dir) {
         Ok(config) => config,
         Err(errors) => {
-            return Err(errors.join("\n"));
+            return Ok(errors);
         }
     };
     let (version, config_processed, config) = match read_description(dir) {
         Ok(config) => config,
         Err(errors) => {
-            return Err(errors.join("\n"));
+            return Ok(errors);
         }
     };
     match version {
@@ -110,23 +111,29 @@ pub fn check(dir: &PathBuf) -> Result<Vec<Annotation>, String> {
     Ok(messages)
 }
 
-pub fn read_description(dir: &PathBuf) -> Result<(u8, Processed, ConfigReport), Vec<String>> {
+pub fn read_description(dir: &PathBuf) -> Result<(u8, Processed, ConfigReport), Vec<Annotation>> {
     let description = dir.join("description.ext");
     if !description.is_file() {
-        return Err(vec![format!(
-            "{} is missing description.ext",
-            dir.display()
+        return Err(vec![Annotation::new(
+            None,
+            description.display().to_string(),
+            0..1,
+            "`description.ext` is missing".to_string(),
+            Level::Error,
         )]);
     }
-    if std::fs::read_to_string(description).is_err() {
-        return Err(vec![format!(
-            "{} failed to read description.ext",
-            dir.display()
+    if let Err(e) = std::fs::read_to_string(&description) {
+        return Err(vec![Annotation::new(
+            None,
+            description.display().to_string(),
+            0..1,
+            format!("`description.ext` is invalid: {}", e),
+            Level::Error,
         )]);
     };
     let workspace = Workspace::builder()
         .physical(dir, LayerType::Source)
-        .finish(None, false)
+        .finish(None, false, &PDriveOption::Disallow)
         .expect("Failed to create workspace");
     let processed = match Processor::run(
         &workspace
@@ -134,21 +141,28 @@ pub fn read_description(dir: &PathBuf) -> Result<(u8, Processed, ConfigReport), 
             .expect("Failed to join path"),
     ) {
         Ok(processed) => processed,
-        Err(hemtt_preprocessor::Error::Code(e)) => {
-            return Err(vec![format!(
-                "{} failed to process description.ext: {}",
-                dir.display(),
-                e.diagnostic()
-                    .expect("diagnostic")
-                    .to_string(&WorkspaceFiles::new())
-            )])
+        Err((_, hemtt_preprocessor::Error::Code(e))) => {
+            return Err(vec![Annotation::new(
+                None,
+                description.display().to_string(),
+                0..1,
+                format!(
+                    "`description.ext` failed to process: {}",
+                    e.diagnostic()
+                        .expect("diagnostic")
+                        .to_string(&WorkspaceFiles::new())
+                ),
+                Level::Error,
+            )]);
         }
-        Err(e) => {
-            return Err(vec![format!(
-                "{} failed to process description.ext: {}",
-                dir.display(),
-                e
-            )])
+        Err((_, e)) => {
+            return Err(vec![Annotation::new(
+                None,
+                description.display().to_string(),
+                0..1,
+                format!("`description.ext` failed to process: {}", e),
+                Level::Error,
+            )]);
         }
     };
     match hemtt_config::parse(None, &processed) {
@@ -185,21 +199,28 @@ pub fn read_description(dir: &PathBuf) -> Result<(u8, Processed, ConfigReport), 
                     .expect("Failed to join path"),
             ) {
                 Ok(processed) => processed,
-                Err(hemtt_preprocessor::Error::Code(e)) => {
-                    return Err(vec![format!(
-                        "{} failed to process description.ext: {}",
-                        dir.display(),
-                        e.diagnostic()
-                            .expect("diagnostic")
-                            .to_string(&WorkspaceFiles::new())
-                    )])
+                Err((_, hemtt_preprocessor::Error::Code(e))) => {
+                    return Err(vec![Annotation::new(
+                        None,
+                        description.display().to_string(),
+                        0..1,
+                        format!(
+                            "`description.ext` failed to process: {}",
+                            e.diagnostic()
+                                .expect("diagnostic")
+                                .to_string(&WorkspaceFiles::new())
+                        ),
+                        Level::Error,
+                    )]);
                 }
-                Err(e) => {
-                    return Err(vec![format!(
-                        "{} failed to process description.ext: {}",
-                        dir.display(),
-                        e
-                    )])
+                Err((_, e)) => {
+                    return Err(vec![Annotation::new(
+                        None,
+                        description.display().to_string(),
+                        0..1,
+                        format!("`description.ext` failed to process: {}", e),
+                        Level::Error,
+                    )]);
                 }
             };
             match hemtt_config::parse(None, &processed) {
@@ -207,12 +228,17 @@ pub fn read_description(dir: &PathBuf) -> Result<(u8, Processed, ConfigReport), 
                 Err(e) => Err(e
                     .iter()
                     .map(|e| {
-                        format!(
-                            "{}: {}",
-                            dir.display(),
-                            e.diagnostic()
-                                .expect("diagnositc")
-                                .to_string(&WorkspaceFiles::new())
+                        Annotation::new(
+                            None,
+                            description.display().to_string(),
+                            0..1,
+                            format!(
+                                "`description.ext` failed to process: {}",
+                                e.diagnostic()
+                                    .expect("diagnositc")
+                                    .to_string(&WorkspaceFiles::new())
+                            ),
+                            Level::Error,
                         )
                     })
                     .collect()),
@@ -221,51 +247,72 @@ pub fn read_description(dir: &PathBuf) -> Result<(u8, Processed, ConfigReport), 
         Err(e) => Err(e
             .iter()
             .map(|e| {
-                format!(
-                    "{}: {}",
-                    dir.display(),
-                    e.diagnostic()
-                        .expect("diagnositc")
-                        .to_string(&WorkspaceFiles::new())
+                Annotation::new(
+                    None,
+                    description.display().to_string(),
+                    0..1,
+                    format!(
+                        "`description.ext` failed to process: {}",
+                        e.diagnostic()
+                            .expect("diagnositc")
+                            .to_string(&WorkspaceFiles::new())
+                    ),
+                    Level::Error,
                 )
             })
             .collect()),
     }
 }
 
-pub fn read_mission(dir: &PathBuf) -> Result<(Processed, ConfigReport), Vec<String>> {
+pub fn read_mission(dir: &PathBuf) -> Result<(Processed, ConfigReport), Vec<Annotation>> {
     let description = dir.join("mission.sqm");
     if !description.is_file() {
-        return Err(vec![format!("{} is missing mission.sqm", dir.display())]);
+        return Err(vec![Annotation::new(
+            None,
+            description.display().to_string(),
+            0..1,
+            "`mission.sqm` is missing".to_string(),
+            Level::Error,
+        )]);
     }
-    if std::fs::read_to_string(description).is_err() {
-        return Err(vec![format!(
-            "{} failed to read mission.sqm",
-            dir.display()
+    if std::fs::read_to_string(&description).is_err() {
+        return Err(vec![Annotation::new(
+            None,
+            description.display().to_string(),
+            0..1,
+            "`mission.sqm` is binarized or invalid".to_string(),
+            Level::Error,
         )]);
     };
     let workspace = Workspace::builder()
         .physical(dir, LayerType::Source)
-        .finish(None, false)
+        .finish(None, false, &PDriveOption::Disallow)
         .expect("Failed to create workspace");
     let processed =
         match Processor::run(&workspace.join("mission.sqm").expect("Failed to join path")) {
             Ok(processed) => processed,
-            Err(hemtt_preprocessor::Error::Code(e)) => {
-                return Err(vec![format!(
-                    "{} failed to process mission.sqm: {}",
-                    dir.display(),
-                    e.diagnostic()
-                        .expect("diagnostic")
-                        .to_string(&WorkspaceFiles::new())
-                )])
+            Err((_, hemtt_preprocessor::Error::Code(e))) => {
+                return Err(vec![Annotation::new(
+                    None,
+                    description.display().to_string(),
+                    0..1,
+                    format!(
+                        "`mission.sqm` failed to process: {}",
+                        e.diagnostic()
+                            .expect("diagnostic")
+                            .to_string(&WorkspaceFiles::new())
+                    ),
+                    Level::Error,
+                )]);
             }
-            Err(e) => {
-                return Err(vec![format!(
-                    "{} failed to process mission.sqm: {}",
-                    dir.display(),
-                    e
-                )])
+            Err((_, e)) => {
+                return Err(vec![Annotation::new(
+                    None,
+                    description.display().to_string(),
+                    0..1,
+                    format!("`mission.sqm` failed to process: {}", e),
+                    Level::Error,
+                )]);
             }
         };
     match hemtt_config::parse(None, &processed) {
@@ -273,12 +320,17 @@ pub fn read_mission(dir: &PathBuf) -> Result<(Processed, ConfigReport), Vec<Stri
         Err(e) => Err(e
             .iter()
             .map(|e| {
-                format!(
-                    "{}: {}",
-                    dir.display(),
-                    e.diagnostic()
-                        .expect("diagnositc")
-                        .to_string(&WorkspaceFiles::new())
+                Annotation::new(
+                    None,
+                    description.display().to_string(),
+                    0..1,
+                    format!(
+                        "`mission.sqm` failed to process: {}",
+                        e.diagnostic()
+                            .expect("diagnositc")
+                            .to_string(&WorkspaceFiles::new())
+                    ),
+                    Level::Error,
                 )
             })
             .collect()),

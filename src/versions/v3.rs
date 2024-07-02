@@ -1,7 +1,7 @@
 use std::path::Path;
 
-use hemtt_common::reporting::Processed;
 use hemtt_config::Config;
+use hemtt_workspace::reporting::Processed;
 
 use crate::{
     annotation::{Annotation, Level},
@@ -27,7 +27,17 @@ fn briefing(dir: &Path) -> Vec<Annotation> {
     let mut messages = vec![];
     let briefing_path = dir.join("edit_me").join("briefing");
     let mut combined_briefing_length = 0;
-    for file in briefing_path.read_dir().unwrap() {
+    let Ok(files) = briefing_path.read_dir() else {
+        messages.push(Annotation::new(
+            None,
+            briefing_path.display().to_string(),
+            0..0,
+            "Briefing folder is missing".to_string(),
+            Level::Error,
+        ));
+        return messages;
+    };
+    for file in files {
         let file = file.unwrap();
         if !file.file_type().unwrap().is_file() {
             continue;

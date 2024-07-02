@@ -5,8 +5,8 @@ pub mod spectator;
 
 use std::path::Path;
 
-use hemtt_common::reporting::Processed;
 use hemtt_config::{Class, Config, Property};
+use hemtt_workspace::reporting::Processed;
 
 use crate::{annotation::Annotation, get_class, get_string, GetChildren};
 

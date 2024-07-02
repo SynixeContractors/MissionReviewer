@@ -1,6 +1,6 @@
 use std::{fmt::Display, path::PathBuf};
 
-use hemtt_common::reporting::Processed;
+use hemtt_workspace::reporting::Processed;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 /// Annotation for a CI environment

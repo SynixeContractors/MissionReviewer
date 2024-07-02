@@ -1,7 +1,7 @@
 use std::path::Path;
 
-use hemtt_common::reporting::Processed;
 use hemtt_config::{Config, Property, Value};
+use hemtt_workspace::reporting::Processed;
 
 use crate::annotation::{Annotation, Level};
 

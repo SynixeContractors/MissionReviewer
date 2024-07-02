@@ -3,7 +3,7 @@ use std::{io::Write, path::Path, sync::RwLock};
 use missionreviewer::annotation::{Annotation, Level};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
-const FLAT_FOLDERS: [&str; 4] = ["contracts", "company", "specials", "generator"];
+const FLAT_FOLDERS: [&str; 2] = ["contracts", "specials"];
 const NESTED_FOLDERS: [&str; 2] = ["campaigns", "theatres"];
 
 fn main() {
