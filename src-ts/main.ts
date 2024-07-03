@@ -32,6 +32,7 @@ async function run(): Promise<void> {
   });
   if (!isWin) {
     execSync(`chmod +x ${process.cwd()}/missionreviewer/missionreviewer`);
+    console.log('missionreviewer is now executable');
   }
 
   let files: string[] = [];
@@ -41,6 +42,8 @@ async function run(): Promise<void> {
     ).getFiles();
     core.debug(files.toString());
   }
+
+  await new Promise(resolve => setTimeout(resolve, 3000));
 
   exec(
     `${process.cwd()}/missionreviewer/${isWin ? 'missionreviewer.exe' : 'missionreviewer'}`,
