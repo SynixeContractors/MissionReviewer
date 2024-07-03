@@ -189,21 +189,23 @@ function run() {
         });
         if (!isWin) {
             (0, child_process_1.execSync)(`chmod +x ${process.cwd()}/missionreviewer/missionreviewer`);
+            console.log('missionreviewer is now executable');
         }
         let files = [];
         if (github.context.payload.pull_request) {
             files = yield new files_1.FileService(core.getInput('GITHUB_TOKEN', { required: true })).getFiles();
             core.debug(files.toString());
         }
+        yield new Promise(resolve => setTimeout(resolve, 3000));
         (0, child_process_1.exec)(`${process.cwd()}/missionreviewer/${isWin ? 'missionreviewer.exe' : 'missionreviewer'}`, (error, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
             if (error) {
-                console.error(`exec error: ${error}`);
+                core.error(`exec error: ${error}`);
                 return;
             }
             console.log(`stdout: ${stdout}`);
             console.error(`stderr: ${stderr}`);
             if (!fs.existsSync(file)) {
-                core.info('No annotations file found.');
+                core.warning('No annotations file found.');
                 return;
             }
             const data = fs.readFileSync(file, 'utf8');
