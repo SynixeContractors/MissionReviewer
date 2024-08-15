@@ -52,6 +52,7 @@ fn briefing(dir: &Path) -> Vec<Annotation> {
                     "Briefing file is not an HTML file".to_string(),
                     Level::Error,
                 ));
+                continue;
             }
             let content = std::fs::read_to_string(&path).unwrap();
             if content.contains("INSERT") {
