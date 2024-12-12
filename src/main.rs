@@ -1,4 +1,8 @@
-use std::{io::Write, path::Path, sync::RwLock};
+use std::{
+    io::Write,
+    path::{Path, PathBuf},
+    sync::RwLock,
+};
 
 use missionreviewer::annotation::{Annotation, Level};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
@@ -14,6 +18,9 @@ fn main() {
     let mut missions = Vec::new();
 
     for folder in FLAT_FOLDERS {
+        if !PathBuf::from(folder).exists() {
+            continue;
+        }
         for mission in std::fs::read_dir(folder).unwrap() {
             let mission = mission.unwrap();
             if !mission.path().is_dir() {
@@ -29,6 +36,9 @@ fn main() {
         }
     }
     for folder in NESTED_FOLDERS {
+        if !PathBuf::from(folder).exists() {
+            continue;
+        }
         for subfolder in std::fs::read_dir(folder).unwrap() {
             let subfolder = subfolder.unwrap();
             if !subfolder.path().is_dir() {

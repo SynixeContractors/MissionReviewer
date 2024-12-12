@@ -52,7 +52,7 @@ impl GetChildren for &Class {
 
 pub fn get_class(parent: impl GetChildren, path: &str) -> Option<Class> {
     fn get_child(props: Vec<Property>, name: &str) -> Option<Class> {
-        return props
+        props
             .iter()
             .find(|c| {
                 if let Property::Class(class) = c {
@@ -67,7 +67,7 @@ pub fn get_class(parent: impl GetChildren, path: &str) -> Option<Class> {
                     panic!("Invalid class after check")
                 };
                 class.clone()
-            });
+            })
     }
     let mut ret = None;
     let mut root: Box<dyn GetChildren> = Box::new(parent);

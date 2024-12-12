@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use hemtt_common::project::hemtt::PDriveOption;
+use hemtt_common::config::PDriveOption;
 use hemtt_config::{ConfigReport, Number, Property, Value};
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::{
