@@ -23,7 +23,7 @@ jobs:
             name: windows-x64
             exe: missionreviewer.exe
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -35,7 +35,7 @@ jobs:
           command: build
           args: --release
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}
           path: target/release/${{ matrix.exe }}
@@ -47,13 +47,13 @@ jobs:
       - build
     steps:
       - name: Download Linux x64
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: linux-x64
           path: release
 
       - name: Download Windows x64
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: windows-x64
           path: release
