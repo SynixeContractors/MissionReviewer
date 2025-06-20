@@ -42,48 +42,6 @@ impl MissionCheck for TriggerChecks {
         match data_type {
             "Trigger" => {
                 self.triggers.push(class.clone());
-
-                // Check for isServerOnly
-                if let Some((is_server_only, _)) = get_number(class, "isServerOnly") {
-                    if is_server_only == 0 {
-                        self.messages.push(Annotation::new(
-                            None,
-                            dir.join("mission.sqm").display().to_string(),
-                            0..0,
-                            "Trigger not set to server only".to_string(),
-                            Level::Error,
-                        ));
-                    }
-                } else {
-                    self.messages.push(Annotation::new(
-                        None,
-                        dir.join("mission.sqm").display().to_string(),
-                        0..0,
-                        "Trigger not set to server only".to_string(),
-                        Level::Error,
-                    ));
-                }
-
-                // Check interval
-                if let Some((interval, _)) = get_float(class, "interval") {
-                    if interval < 0.6 {
-                        self.messages.push(Annotation::new(
-                            None,
-                            dir.join("mission.sqm").display().to_string(),
-                            0..0,
-                            "Trigger interval is set too low (below 0.5 seconds)".to_string(),
-                            Level::Error,
-                        ));
-                    }
-                } else {
-                    self.messages.push(Annotation::new(
-                        None,
-                        dir.join("mission.sqm").display().to_string(),
-                        0..0,
-                        "Trigger interval is set too low (below 0.5 seconds)".to_string(),
-                        Level::Error,
-                    ));
-                }
             }
             "Waypoint" => {
                 self.waypoints.push(class.clone());
@@ -104,7 +62,7 @@ impl MissionCheck for TriggerChecks {
         }
     }
 
-    fn link(&mut self, _mission: (&Processed, &Config), _dir: &Path, class: &Class) {
+    fn link(&mut self, _mission: (&Processed, &Config), dir: &Path, class: &Class) {
         let Some(custom_data) = get_class(class, "CustomData") else {
             return;
         };
@@ -160,12 +118,55 @@ impl MissionCheck for TriggerChecks {
                 trigger = Some(item_1);
             }
         }
+        if let Some(trigger) = trigger {
+            // Check for isServerOnly
+            if let Some((is_server_only, _)) = get_number(trigger, "isServerOnly") {
+                if is_server_only == 0 {
+                    self.messages.push(Annotation::new(
+                        None,
+                        dir.join("mission.sqm").display().to_string(),
+                        0..0,
+                        "Trigger not set to server only".to_string(),
+                        Level::Error,
+                    ));
+                }
+            } else {
+                self.messages.push(Annotation::new(
+                    None,
+                    dir.join("mission.sqm").display().to_string(),
+                    0..0,
+                    "Trigger not set to server only".to_string(),
+                    Level::Error,
+                ));
+            }
+
+            // Check interval
+            if let Some((interval, _)) = get_float(trigger, "interval") {
+                if interval < 0.6 {
+                    self.messages.push(Annotation::new(
+                        None,
+                        dir.join("mission.sqm").display().to_string(),
+                        0..0,
+                        "Trigger interval is set too low (below 0.5 seconds)".to_string(),
+                        Level::Error,
+                    ));
+                }
+            } else {
+                self.messages.push(Annotation::new(
+                    None,
+                    dir.join("mission.sqm").display().to_string(),
+                    0..0,
+                    "Trigger interval is set too low (below 0.5 seconds)".to_string(),
+                    Level::Error,
+                ));
+            }
+        }
         if trigger.is_none() || waypoint.is_none() {
             self.messages.push(Annotation::new(
                 None,
-                _dir.join("mission.sqm").display().to_string(),
+                dir.join("mission.sqm").display().to_string(),
                 0..0,
-                "WaypointActivation link does not connect to a trigger or waypoint".to_string(),
+                "WaypointActivation link does not connect to a trigger and waypoint".to_string(),
                 Level::Error,
             ));
             return;
@@ -175,7 +176,7 @@ impl MissionCheck for TriggerChecks {
         let Some((waypoint_type, _)) = get_string(waypoint, "type") else {
             self.messages.push(Annotation::new(
                 None,
-                _dir.join("mission.sqm").display().to_string(),
+                dir.join("mission.sqm").display().to_string(),
                 0..0,
                 "WaypointActivation link does not connect to a valid waypoint".to_string(),
                 Level::Error,
@@ -195,7 +196,7 @@ impl MissionCheck for TriggerChecks {
             ("ACTIVATE", "Hold") => {
                 self.messages.push(Annotation::new(
                     None,
-                    _dir.join("mission.sqm").display().to_string(),
+                    dir.join("mission.sqm").display().to_string(),
                     0..0,
                     "HOLD waypoint is linked to a trigger that isn't SKIP WAYPOINT".to_string(),
                     Level::Error,
