@@ -9,23 +9,23 @@ use crate::{
     get_string,
 };
 
-pub struct RequireSpectator {
+pub struct ZeusModule {
     seen: bool,
 }
 
-impl RequireSpectator {
+impl ZeusModule {
     pub fn new() -> Self {
         Self { seen: false }
     }
 }
 
-impl Default for RequireSpectator {
+impl Default for ZeusModule {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MissionCheck for RequireSpectator {
+impl MissionCheck for ZeusModule {
     fn object(
         &mut self,
         _: (&Processed, &Config),
@@ -33,7 +33,7 @@ impl MissionCheck for RequireSpectator {
         class: &hemtt_config::Class,
         data_type: &str,
     ) {
-        if data_type != "Object" {
+        if data_type != "Logic" {
             return;
         }
         if self.seen {
@@ -42,18 +42,18 @@ impl MissionCheck for RequireSpectator {
         let Some((class, _)) = get_string(class, "type") else {
             return;
         };
-        if class == "synixe_spectator_screen" {
+        if class == "ModuleCurator_F" {
             self.seen = true;
         }
     }
 
     fn done(&self, dir: &Path) -> Vec<Annotation> {
-        if !self.seen {
+        if self.seen {
             vec![Annotation::new(
                 None,
                 dir.join("mission.sqm").display().to_string(),
                 0..0,
-                "No spectator screen found".to_string(),
+                "Zeus modules should not be placed in missions. (You can use ACE interact for local testing)".to_string(),
                 Level::Error,
             )]
         } else {

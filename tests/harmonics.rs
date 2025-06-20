@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use missionreviewer::{
-    checks::objects::run_over_entities,
+    checks::run_checks,
     get_class, get_number,
     mission::{read_description, read_mission},
 };
@@ -23,7 +23,7 @@ fn get_time() {
 #[test]
 fn observe_specator() {
     let mission = read_mission(&PathBuf::from("tests/CO30_Brett_Harmonics.pja308")).unwrap();
-    let annotations = run_over_entities(
+    let annotations = run_checks(
         &PathBuf::from("tests/CO30_Brett_Harmonics.pja308"),
         vec![Box::new(
             missionreviewer::checks::objects::spectator::RequireSpectator::new(),
@@ -36,7 +36,7 @@ fn observe_specator() {
 #[test]
 fn observe_shops() {
     let mission = read_mission(&PathBuf::from("tests/CO30_Brett_Harmonics.pja308")).unwrap();
-    let annotations = run_over_entities(
+    let annotations = run_checks(
         &PathBuf::from("tests/CO30_Brett_Harmonics.pja308"),
         vec![Box::new(
             missionreviewer::checks::objects::shops::ShopCheck::new(),

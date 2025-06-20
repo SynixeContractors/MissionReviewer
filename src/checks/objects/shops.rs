@@ -5,10 +5,9 @@ use hemtt_workspace::reporting::Processed;
 
 use crate::{
     annotation::{Annotation, Level},
+    checks::MissionCheck,
     get_class, get_number, get_string, GetChildren,
 };
-
-use super::ObjectCheck;
 
 const REQUIRED_SHOPS: usize = 2;
 
@@ -52,8 +51,8 @@ impl Default for ShopCheck {
     }
 }
 
-impl ObjectCheck for ShopCheck {
-    fn observe(
+impl MissionCheck for ShopCheck {
+    fn object(
         &mut self,
         _: (&Processed, &Config),
         dir: &Path,

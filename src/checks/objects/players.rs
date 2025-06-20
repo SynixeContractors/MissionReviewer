@@ -5,16 +5,16 @@ use hemtt_workspace::reporting::Processed;
 
 use crate::{
     annotation::{Annotation, Level},
+    checks::MissionCheck,
     get_class, get_number, get_string,
 };
-
-use super::ObjectCheck;
 
 pub struct PlayerCheck {
     count: usize,
     expected: usize,
     require_contractors: bool,
     messages: Vec<Annotation>,
+    did_log_player_description: bool,
 }
 
 impl PlayerCheck {
@@ -40,12 +40,13 @@ impl PlayerCheck {
             },
             require_contractors,
             messages: vec![],
+            did_log_player_description: false,
         }
     }
 }
 
-impl ObjectCheck for PlayerCheck {
-    fn observe(
+impl MissionCheck for PlayerCheck {
+    fn object(
         &mut self,
         mission: (&Processed, &Config),
         dir: &Path,
@@ -70,17 +71,28 @@ impl ObjectCheck for PlayerCheck {
             return;
         }
 
-        let Some((description, description_span)) = get_string(attributes, "description") else {
+        let Some((description, description_span)) = get_string(&attributes, "description") else {
+            if !self.did_log_player_description {
+                self.messages.push(Annotation::new(
+                    Some(mission.0),
+                    dir.join("mission.sqm").display().to_string(),
+                    attributes.name().map(|n| n.span.clone()).unwrap_or(0..0),
+                    "All player descriptions should be 'Contractor'".to_string(),
+                    Level::Error,
+                ));
+                self.did_log_player_description = true;
+            }
             return;
         };
-        if description != "Contractor" {
+        if description != "Contractor" && !self.did_log_player_description {
             self.messages.push(Annotation::new(
                 Some(mission.0),
                 dir.join("mission.sqm").display().to_string(),
                 description_span,
-                "Player description should be 'Contractor'".to_string(),
+                "All player descriptions should be 'Contractor'".to_string(),
                 Level::Error,
             ));
+            self.did_log_player_description = true;
         }
 
         let Some((class, class_span)) = get_string(class, "type") else {

@@ -97,6 +97,21 @@ pub fn get_number(parent: impl GetChildren, path: &str) -> Option<(i32, Range<us
     None
 }
 
+pub fn get_float(parent: impl GetChildren, path: &str) -> Option<(f32, Range<usize>)> {
+    for prop in parent.get_children() {
+        if let Property::Entry { name, value, .. } = prop {
+            if name.as_str() == path {
+                if let hemtt_config::Value::Number(hemtt_config::Number::Float32 { value, span }) =
+                    value
+                {
+                    return Some((value, span));
+                }
+            }
+        }
+    }
+    None
+}
+
 pub fn get_string(parent: impl GetChildren, path: &str) -> Option<(String, Range<usize>)> {
     for prop in parent.get_children() {
         if let Property::Entry { name, value, .. } = prop {

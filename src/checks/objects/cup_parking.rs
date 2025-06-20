@@ -9,23 +9,23 @@ use crate::{
     get_string,
 };
 
-pub struct RequireSpectator {
+pub struct CUPParking {
     seen: bool,
 }
 
-impl RequireSpectator {
+impl CUPParking {
     pub fn new() -> Self {
         Self { seen: false }
     }
 }
 
-impl Default for RequireSpectator {
+impl Default for CUPParking {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MissionCheck for RequireSpectator {
+impl MissionCheck for CUPParking {
     fn object(
         &mut self,
         _: (&Processed, &Config),
@@ -42,18 +42,18 @@ impl MissionCheck for RequireSpectator {
         let Some((class, _)) = get_string(class, "type") else {
             return;
         };
-        if class == "synixe_spectator_screen" {
+        if class == "CUP_sign_parking" {
             self.seen = true;
         }
     }
 
     fn done(&self, dir: &Path) -> Vec<Annotation> {
-        if !self.seen {
+        if self.seen {
             vec![Annotation::new(
                 None,
                 dir.join("mission.sqm").display().to_string(),
                 0..0,
-                "No spectator screen found".to_string(),
+                "Use the vanilla \"Parking Lot\" (RoadSign_Livonia_parking) sign, the CUP sign floats above the ground".to_string(),
                 Level::Error,
             )]
         } else {

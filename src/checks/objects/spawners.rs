@@ -5,10 +5,9 @@ use hemtt_workspace::reporting::Processed;
 
 use crate::{
     annotation::{Annotation, Level},
+    checks::MissionCheck,
     get_string,
 };
-
-use super::ObjectCheck;
 
 pub struct SpawnersCheck {
     count_land: u32,
@@ -38,8 +37,8 @@ impl SpawnersCheck {
     }
 }
 
-impl ObjectCheck for SpawnersCheck {
-    fn observe(
+impl MissionCheck for SpawnersCheck {
+    fn object(
         &mut self,
         _: (&Processed, &Config),
         _: &Path,

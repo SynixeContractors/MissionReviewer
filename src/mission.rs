@@ -10,9 +10,12 @@ use hemtt_workspace::{
 
 use crate::{
     annotation::{Annotation, Level},
-    checks::objects::{
-        players::PlayerCheck, run_over_entities, shops::ShopCheck, spawners::SpawnersCheck,
-        spectator::RequireSpectator,
+    checks::{
+        objects::{
+            players::PlayerCheck, shops::ShopCheck, spawners::SpawnersCheck,
+            spectator::RequireSpectator, trigger::TriggerChecks,
+        },
+        run_checks,
     },
     get_number, versions,
 };
@@ -60,7 +63,7 @@ pub fn check(dir: &PathBuf) -> Result<Vec<Annotation>, String> {
             ));
         }
     }
-    let checks = run_over_entities(
+    let checks = run_checks(
         dir,
         {
             let (synixe_type, synixe_type_span) =
@@ -70,8 +73,7 @@ pub fn check(dir: &PathBuf) -> Result<Vec<Annotation>, String> {
                 0 | 1 => {
                     vec![
                         Box::new(PlayerCheck::new(dir, true)),
-                        Box::new(ShopCheck::new()),
-                        Box::new(RequireSpectator::new()),
+                        Box::new(TriggerChecks::new()),
                         Box::new(SpawnersCheck::new(
                             true,
                             version,
@@ -79,16 +81,20 @@ pub fn check(dir: &PathBuf) -> Result<Vec<Annotation>, String> {
                                 .map(|(v, _)| v == 1)
                                 .unwrap_or_default(),
                         )),
+                        Box::new(ShopCheck::new()),
+                        Box::new(RequireSpectator::new()),
                     ]
                 }
                 2 => vec![
                     Box::new(PlayerCheck::new(dir, true)),
-                    Box::new(ShopCheck::new()),
+                    Box::new(TriggerChecks::new()),
                     Box::new(SpawnersCheck::new(false, version, false)),
+                    Box::new(ShopCheck::new()),
                 ],
                 3 => vec![
-                    Box::new(SpawnersCheck::new(false, version, false)),
                     Box::new(PlayerCheck::new(dir, false)),
+                    Box::new(SpawnersCheck::new(false, version, false)),
+                    Box::new(TriggerChecks::new()),
                 ],
                 _ => {
                     messages.push(Annotation::new(
