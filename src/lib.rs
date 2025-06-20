@@ -101,10 +101,19 @@ pub fn get_float(parent: impl GetChildren, path: &str) -> Option<(f32, Range<usi
     for prop in parent.get_children() {
         if let Property::Entry { name, value, .. } = prop {
             if name.as_str() == path {
-                if let hemtt_config::Value::Number(hemtt_config::Number::Float32 { value, span }) =
-                    value
-                {
-                    return Some((value, span));
+                match value {
+                    hemtt_config::Value::Number(hemtt_config::Number::Float32 { value, span }) => {
+                        return Some((value, span));
+                    }
+                    hemtt_config::Value::Number(hemtt_config::Number::Int32 { value, span } ) => {
+                        // Convert integer to float
+                        return Some((value as f32, span));
+                    }
+                    hemtt_config::Value::Number(hemtt_config::Number::Int64 { value, span } ) => {
+                        // Convert integer to float
+                        return Some((value as f32, span));
+                    }
+                    _ => {}
                 }
             }
         }

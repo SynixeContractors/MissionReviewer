@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use hemtt_config::{Class, Config};
+use hemtt_config::{Class, Config, Ident};
 use hemtt_workspace::reporting::Processed;
 
 use crate::{
@@ -13,6 +13,7 @@ pub struct TriggerChecks {
     messages: Vec<Annotation>,
     triggers: Vec<Class>,
     waypoints: Vec<Class>,
+    checked_triggers: Vec<Ident>,
 }
 
 impl TriggerChecks {
@@ -21,6 +22,7 @@ impl TriggerChecks {
             messages: Vec::new(),
             triggers: Vec::new(),
             waypoints: Vec::new(),
+            checked_triggers: Vec::new(),
         }
     }
 }
@@ -119,8 +121,15 @@ impl MissionCheck for TriggerChecks {
             }
         }
         if let Some(trigger) = trigger {
+            if self.checked_triggers.contains(trigger.name().unwrap()) {
+                return; // Already checked this trigger
+            }
+            self.checked_triggers.push(trigger.name().unwrap().clone());
+            let Some(attributes) = get_class(trigger, "Attributes") else {
+                return;
+            };
             // Check for isServerOnly
-            if let Some((is_server_only, _)) = get_number(trigger, "isServerOnly") {
+            if let Some((is_server_only, _)) = get_number(&attributes, "isServerOnly") {
                 if is_server_only == 0 {
                     self.messages.push(Annotation::new(
                         None,
@@ -141,7 +150,7 @@ impl MissionCheck for TriggerChecks {
             }
 
             // Check interval
-            if let Some((interval, _)) = get_float(trigger, "interval") {
+            if let Some((interval, _)) = get_float(&attributes, "triggerInterval") {
                 if interval < 0.6 {
                     self.messages.push(Annotation::new(
                         None,
