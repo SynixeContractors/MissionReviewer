@@ -98,12 +98,12 @@ impl MissionCheck for PlayerCheck {
         let Some((class, class_span)) = get_string(class, "type") else {
             return;
         };
-        if class != "synixe_contractors_Unit_I_Contractor" {
+        if class != "synixe_factions_synixe_Contractor" {
             self.messages.push(Annotation::new(
                 Some(mission.0),
                 dir.join("mission.sqm").display().to_string(),
                 class_span,
-                "Player class should be 'synixe_contractors_Unit_I_Contractor'".to_string(),
+                "Player class should be 'synixe_factions_synixe_Contractor'".to_string(),
                 Level::Error,
             ));
         }
