@@ -105,11 +105,11 @@ pub fn get_float(parent: impl GetChildren, path: &str) -> Option<(f32, Range<usi
                     hemtt_config::Value::Number(hemtt_config::Number::Float32 { value, span }) => {
                         return Some((value, span));
                     }
-                    hemtt_config::Value::Number(hemtt_config::Number::Int32 { value, span } ) => {
+                    hemtt_config::Value::Number(hemtt_config::Number::Int32 { value, span }) => {
                         // Convert integer to float
                         return Some((value as f32, span));
                     }
-                    hemtt_config::Value::Number(hemtt_config::Number::Int64 { value, span } ) => {
+                    hemtt_config::Value::Number(hemtt_config::Number::Int64 { value, span }) => {
                         // Convert integer to float
                         return Some((value as f32, span));
                     }

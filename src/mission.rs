@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use hemtt_common::config::PDriveOption;
+use hemtt_common::config::{PDriveOption, PreprocessorOptions};
 use hemtt_config::{ConfigReport, Number, Property, Value};
 use hemtt_preprocessor::Processor;
 use hemtt_workspace::{
@@ -145,6 +145,7 @@ pub fn read_description(dir: &PathBuf) -> Result<(u8, Processed, ConfigReport), 
         &workspace
             .join("description.ext")
             .expect("Failed to join path"),
+        &PreprocessorOptions::default(),
     ) {
         Ok(processed) => processed,
         Err((_, hemtt_preprocessor::Error::Code(e))) => {
@@ -203,6 +204,7 @@ pub fn read_description(dir: &PathBuf) -> Result<(u8, Processed, ConfigReport), 
                     .expect("Failed to join path")
                     .join("description.ext")
                     .expect("Failed to join path"),
+                &PreprocessorOptions::default(),
             ) {
                 Ok(processed) => processed,
                 Err((_, hemtt_preprocessor::Error::Code(e))) => {
@@ -294,33 +296,35 @@ pub fn read_mission(dir: &PathBuf) -> Result<(Processed, ConfigReport), Vec<Anno
         .physical(dir, LayerType::Source)
         .finish(None, false, &PDriveOption::Disallow)
         .expect("Failed to create workspace");
-    let processed =
-        match Processor::run(&workspace.join("mission.sqm").expect("Failed to join path")) {
-            Ok(processed) => processed,
-            Err((_, hemtt_preprocessor::Error::Code(e))) => {
-                return Err(vec![Annotation::new(
-                    None,
-                    description.display().to_string(),
-                    0..1,
-                    format!(
-                        "`mission.sqm` failed to process: {}",
-                        e.diagnostic()
-                            .expect("diagnostic")
-                            .to_string(&WorkspaceFiles::new())
-                    ),
-                    Level::Error,
-                )]);
-            }
-            Err((_, e)) => {
-                return Err(vec![Annotation::new(
-                    None,
-                    description.display().to_string(),
-                    0..1,
-                    format!("`mission.sqm` failed to process: {}", e),
-                    Level::Error,
-                )]);
-            }
-        };
+    let processed = match Processor::run(
+        &workspace.join("mission.sqm").expect("Failed to join path"),
+        &PreprocessorOptions::default(),
+    ) {
+        Ok(processed) => processed,
+        Err((_, hemtt_preprocessor::Error::Code(e))) => {
+            return Err(vec![Annotation::new(
+                None,
+                description.display().to_string(),
+                0..1,
+                format!(
+                    "`mission.sqm` failed to process: {}",
+                    e.diagnostic()
+                        .expect("diagnostic")
+                        .to_string(&WorkspaceFiles::new())
+                ),
+                Level::Error,
+            )]);
+        }
+        Err((_, e)) => {
+            return Err(vec![Annotation::new(
+                None,
+                description.display().to_string(),
+                0..1,
+                format!("`mission.sqm` failed to process: {}", e),
+                Level::Error,
+            )]);
+        }
+    };
     match hemtt_config::parse(None, &processed) {
         Ok(config) => Ok((processed, config)),
         Err(e) => Err(e
