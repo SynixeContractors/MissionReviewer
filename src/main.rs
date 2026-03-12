@@ -8,7 +8,7 @@ use missionreviewer::annotation::{Annotation, Level};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 
 const FLAT_FOLDERS: [&str; 2] = ["contracts", "specials"];
-const NESTED_FOLDERS: [&str; 2] = ["campaigns", "theatres"];
+const NESTED_FOLDERS: [&str; 1] = ["theatres"];
 
 fn main() {
     let messages = RwLock::new(Vec::new());

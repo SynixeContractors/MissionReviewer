@@ -26,7 +26,6 @@ pub fn check(
 fn briefing(dir: &Path) -> Vec<Annotation> {
     let mut messages = vec![];
     let briefing_path = dir.join("edit_me").join("briefing");
-    let mut combined_briefing_length = 0;
     let Ok(files) = briefing_path.read_dir() else {
         messages.push(Annotation::new(
             None,
@@ -65,34 +64,18 @@ fn briefing(dir: &Path) -> Vec<Annotation> {
                 ));
             }
         }
-        match path.file_name().unwrap().to_str().unwrap() {
-            "mission.html" | "objectives.html" => {
-                let content = std::fs::read_to_string(&path).unwrap();
-                combined_briefing_length += content.len();
+        if path.extension().unwrap().to_str().unwrap() == "html" {
+            let content = std::fs::read_to_string(&path).unwrap();
+            if content.len() > 1960 {
+                messages.push(Annotation::new(
+                    None,
+                    path.display().to_string(),
+                    0..0,
+                    format!("Briefing {} is too long for Discord", path.display()),
+                    Level::Error,
+                ));
             }
-            "situation.html" => {
-                let content = std::fs::read_to_string(&path).unwrap();
-                if content.len() > 1900 {
-                    messages.push(Annotation::new(
-                        None,
-                        path.display().to_string(),
-                        0..0,
-                        "Situation briefing is too long for Discord".to_string(),
-                        Level::Error,
-                    ));
-                }
-            }
-            _ => {}
         }
-    }
-    if combined_briefing_length > 1900 {
-        messages.push(Annotation::new(
-            None,
-            briefing_path.display().to_string(),
-            0..0,
-            "Combined briefing (mission & objectives) is too long for Discord".to_string(),
-            Level::Error,
-        ));
     }
     messages
 }

@@ -42,7 +42,7 @@ impl MissionCheck for CUPParking {
         let Some((class, _)) = get_string(class, "type") else {
             return;
         };
-        if class == "CUP_sign_parking" {
+        if class == "CUP_sign_parking" || class == "CUP_sign_parking_new" {
             self.seen = true;
         }
     }
