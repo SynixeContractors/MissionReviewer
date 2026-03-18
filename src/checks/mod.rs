@@ -27,7 +27,9 @@ pub fn run_checks(
     mut checks: Vec<Box<dyn MissionCheck>>,
     mission: (&Processed, &Config),
 ) -> Vec<Annotation> {
-    let entities = get_class(mission.1, "Mission.Entities").unwrap();
+    let Some(entities) = get_class(mission.1, "Mission.Entities") else {
+        return Vec::new();
+    };
     process_entities(mission, dir, &mut checks, entities);
     if let Some(links) = get_class(mission.1, "Mission.Connections.Links") {
         process_links(mission, dir, &mut checks, links);
