@@ -110,7 +110,8 @@ pub fn time(
     }
 
     let (mission_minutes, mission_minutes_span) =
-        if let Some((mission_minutes, mission_minutes_span)) = get_number(&mission_intel, "minute") {
+        if let Some((mission_minutes, mission_minutes_span)) = get_number(&mission_intel, "minute")
+        {
             (mission_minutes, mission_minutes_span)
         } else {
             let Some(map) = dir.extension().and_then(|ext| ext.to_str()) else {

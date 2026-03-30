@@ -75,6 +75,20 @@ fn briefing(dir: &Path) -> Vec<Annotation> {
                     Level::Error,
                 ));
             }
+
+            let mut remaining_content = content.as_str();
+            let mut offset = 0;
+            while let Some(pos) = remaining_content.find(" & ") {
+                messages.push(Annotation::new(
+                    None,
+                    path.display().to_string(),
+                    (offset + pos + 1)..(offset + pos + 2),
+                    "Briefing file contains an unescaped ampersand. Use &amp; instead.".to_string(),
+                    Level::Error,
+                ));
+                offset += pos + 3;
+                remaining_content = &remaining_content[pos + 3..];
+            }
         }
     }
     messages
