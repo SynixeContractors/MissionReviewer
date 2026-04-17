@@ -11,11 +11,9 @@ use hemtt_workspace::{
 use crate::{
     annotation::{Annotation, Level},
     checks::{
-        objects::{
-            players::PlayerCheck, shops::ShopCheck, spawners::SpawnersCheck,
-            spectator::RequireSpectator, trigger::TriggerChecks,
-        },
-        run_checks,
+        MissionCheck, objects::{
+            cup_parking::CUPParking, players::PlayerCheck, shops::ShopCheck, spawners::SpawnersCheck, spectator::RequireSpectator, trigger::TriggerChecks
+        }, run_checks
     },
     get_number, versions,
 };
@@ -68,12 +66,15 @@ pub fn check(dir: &PathBuf) -> Result<Vec<Annotation>, String> {
         {
             let (synixe_type, synixe_type_span) =
                 get_number(config.config(), "synixe_type").unwrap_or_default();
+            let mut global_checks: Vec<Box<dyn MissionCheck>> = vec![
+                Box::new(TriggerChecks::new()),
+                Box::new(CUPParking::new()),
+            ];
             // 0: Contract, 1: Sub-Contract, 2: Training, 3: Special
-            match synixe_type {
+            global_checks.append(&mut match synixe_type {
                 0 | 1 => {
                     vec![
                         Box::new(PlayerCheck::new(dir, true)),
-                        Box::new(TriggerChecks::new()),
                         Box::new(SpawnersCheck::new(
                             true,
                             version,
@@ -87,14 +88,12 @@ pub fn check(dir: &PathBuf) -> Result<Vec<Annotation>, String> {
                 }
                 2 => vec![
                     Box::new(PlayerCheck::new(dir, true)),
-                    Box::new(TriggerChecks::new()),
                     Box::new(SpawnersCheck::new(false, version, false)),
                     Box::new(ShopCheck::new()),
                 ],
                 3 => vec![
                     Box::new(PlayerCheck::new(dir, false)),
                     Box::new(SpawnersCheck::new(false, version, false)),
-                    Box::new(TriggerChecks::new()),
                 ],
                 _ => {
                     messages.push(Annotation::new(
@@ -109,7 +108,8 @@ pub fn check(dir: &PathBuf) -> Result<Vec<Annotation>, String> {
                     ));
                     vec![]
                 }
-            }
+            });
+            global_checks
         },
         (&mission_processed, mission.config()),
     );
