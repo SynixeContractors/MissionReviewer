@@ -11,9 +11,12 @@ use hemtt_workspace::{
 use crate::{
     annotation::{Annotation, Level},
     checks::{
-        MissionCheck, objects::{
-            cup_parking::CUPParking, players::PlayerCheck, shops::ShopCheck, spawners::SpawnersCheck, spectator::RequireSpectator, trigger::TriggerChecks
-        }, run_checks
+        objects::{
+            cup_parking::CUPParking, players::PlayerCheck, shops::ShopCheck,
+            spawners::SpawnersCheck, spectator::RequireSpectator, trigger::TriggerChecks,
+            zeus::ZeusModule,
+        },
+        run_checks, MissionCheck,
     },
     get_number, versions,
 };
@@ -69,6 +72,7 @@ pub fn check(dir: &PathBuf) -> Result<Vec<Annotation>, String> {
             let mut global_checks: Vec<Box<dyn MissionCheck>> = vec![
                 Box::new(TriggerChecks::new()),
                 Box::new(CUPParking::new()),
+                Box::new(ZeusModule::new()),
             ];
             // 0: Contract, 1: Sub-Contract, 2: Training, 3: Special
             global_checks.append(&mut match synixe_type {
