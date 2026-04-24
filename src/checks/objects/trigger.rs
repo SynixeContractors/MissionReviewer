@@ -216,16 +216,14 @@ impl MissionCheck for TriggerChecks {
             ));
             return;
         };
-        let trigger_type = {
-            let Some(attributes) = get_class(trigger, "Attributes") else {
-                return;
-            };
-            get_string(&attributes, "type")
-                .map(|(s, _)| s)
-                .unwrap_or_else(|| "ACTIVATE".to_string())
+        let Some(attributes) = get_class(trigger, "Attributes") else {
+            return;
         };
+        let trigger_type = get_string(&attributes, "type")
+            .map(|(s, _)| s)
+            .unwrap_or_else(|| "ACTIVATE");
         #[allow(clippy::single_match)]
-        match (trigger_type.as_str(), waypoint_type.as_str()) {
+        match (trigger_type, waypoint_type) {
             ("ACTIVATE", "Hold") => {
                 self.messages.push(Annotation::new(
                     None,

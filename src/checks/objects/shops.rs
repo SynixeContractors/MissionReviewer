@@ -24,10 +24,10 @@ impl ShopCheck {
         }
     }
 
-    fn check_attribute(
+    fn check_attribute<'a>(
         &mut self,
         dir: &Path,
-        attributes: impl GetChildren,
+        attributes: &'a dyn GetChildren<'a>,
         property: &str,
         message: String,
     ) {

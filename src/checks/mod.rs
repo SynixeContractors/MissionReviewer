@@ -37,11 +37,11 @@ pub fn run_checks(
     checks.iter().flat_map(|c| c.done(dir)).collect()
 }
 
-fn process_entities(
+fn process_entities<'a>(
     mission: (&Processed, &Config),
     dir: &Path,
     checks: &mut Vec<Box<dyn MissionCheck>>,
-    parent: impl GetChildren,
+    parent: &'a dyn GetChildren<'a>,
 ) {
     for child in parent.get_children() {
         if let Property::Class(class) = child {
@@ -49,9 +49,9 @@ fn process_entities(
                 continue;
             };
             for check in &mut *checks {
-                check.object(mission, dir, &class, data_type.as_str());
+                check.object(mission, dir, class, data_type);
             }
-            if let "Group" | "Layer" = data_type.as_str() {
+            if let "Group" | "Layer" = data_type {
                 let Some(entities) = get_class(&class, "Entities") else {
                     continue;
                 };
@@ -61,16 +61,16 @@ fn process_entities(
     }
 }
 
-fn process_links(
+fn process_links<'a>(
     mission: (&Processed, &Config),
     dir: &Path,
     checks: &mut Vec<Box<dyn MissionCheck>>,
-    parent: impl GetChildren,
+    parent: &'a dyn GetChildren<'a>,
 ) {
     for child in parent.get_children() {
         if let Property::Class(class) = child {
             for check in &mut *checks {
-                check.link(mission, dir, &class);
+                check.link(mission, dir, class);
             }
         }
     }

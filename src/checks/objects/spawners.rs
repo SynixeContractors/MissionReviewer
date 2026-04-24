@@ -54,7 +54,7 @@ impl MissionCheck for SpawnersCheck {
                     return;
                 };
                 // TODO check distance between spawners
-                match type_.as_str() {
+                match type_ {
                     "crate_client_garage_land_large"
                     | "crate_client_garage_land_medium"
                     | "crate_client_garage_land_small" => self.count_land += 1,
@@ -74,7 +74,7 @@ impl MissionCheck for SpawnersCheck {
                 let Some((name, _)) = get_string(class, "name") else {
                     return;
                 };
-                match name.as_str() {
+                match name {
                     "spawn_land" => self.count_land += 1,
                     "spawn_air" => self.count_air += 1,
                     "spawn_sea" => self.count_sea += 1,

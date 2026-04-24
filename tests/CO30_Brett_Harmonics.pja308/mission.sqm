@@ -10966,6 +10966,7 @@ class Mission
 					class Attributes
 					{
 						rank="SERGEANT";
+                        isPlayer=1;
 					};
 					id=938;
 					type="O_MU_islam_SL_F";

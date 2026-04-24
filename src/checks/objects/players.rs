@@ -59,15 +59,32 @@ impl MissionCheck for PlayerCheck {
         let Some(attributes) = get_class(class, "Attributes") else {
             return;
         };
-        let Some((playable, _)) = get_number(&attributes, "isPlayable") else {
-            return;
-        };
-        if playable != 1 {
+        let is_player = get_number(&attributes, "isPlayer")
+            .map(|(value, _)| value)
+            .unwrap_or(0);
+        let is_playable = get_number(&attributes, "isPlayable")
+            .map(|(value, _)| value)
+            .unwrap_or(0);
+        if is_player != 1 && is_playable != 1 {
             return;
         }
         self.count += 1;
 
         if !self.require_contractors {
+            return;
+        }
+
+        let Some((side, side_range)) = get_string(class, "side") else {
+            return;
+        };
+        if side != "West" {
+            self.messages.push(Annotation::new(
+                Some(mission.0),
+                dir.join("mission.sqm").display().to_string(),
+                side_range.clone(),
+                "Player side should be 'West'".to_string(),
+                Level::Error,
+            ));
             return;
         }
 
@@ -88,7 +105,7 @@ impl MissionCheck for PlayerCheck {
             self.messages.push(Annotation::new(
                 Some(mission.0),
                 dir.join("mission.sqm").display().to_string(),
-                description_span,
+                description_span.clone(),
                 "All player descriptions should be 'Contractor'".to_string(),
                 Level::Error,
             ));
@@ -102,7 +119,7 @@ impl MissionCheck for PlayerCheck {
             self.messages.push(Annotation::new(
                 Some(mission.0),
                 dir.join("mission.sqm").display().to_string(),
-                class_span,
+                class_span.clone(),
                 "Player class should be 'synixe_factions_synixe_Contractor'".to_string(),
                 Level::Error,
             ));

@@ -23,7 +23,7 @@ pub fn name_summary_author(dir: &Path, config: (&Processed, &Config)) -> Vec<Ann
                         messages.push(Annotation::new(
                             Some(config.0),
                             path.display().to_string(),
-                            entry.span(),
+                            entry.span().clone(),
                             "OnLoadName is not set".to_string(),
                             Level::Error,
                         ));
@@ -32,7 +32,7 @@ pub fn name_summary_author(dir: &Path, config: (&Processed, &Config)) -> Vec<Ann
                     messages.push(Annotation::new(
                         Some(config.0),
                         path.display().to_string(),
-                        entry.span(),
+                        entry.span().clone(),
                         "OnLoadName is not a string".to_string(),
                         Level::Error,
                     ));
@@ -45,7 +45,7 @@ pub fn name_summary_author(dir: &Path, config: (&Processed, &Config)) -> Vec<Ann
                         messages.push(Annotation::new(
                             Some(config.0),
                             path.display().to_string(),
-                            entry.span(),
+                            entry.span().clone(),
                             "OnLoadMission is not set".to_string(),
                             Level::Error,
                         ));
@@ -54,7 +54,7 @@ pub fn name_summary_author(dir: &Path, config: (&Processed, &Config)) -> Vec<Ann
                         messages.push(Annotation::new(
                             Some(config.0),
                             path.display().to_string(),
-                            entry.span(),
+                            entry.span().clone(),
                             "OnLoadMission ends with a period".to_string(),
                             Level::Warning,
                         ));
@@ -62,7 +62,7 @@ pub fn name_summary_author(dir: &Path, config: (&Processed, &Config)) -> Vec<Ann
                         messages.push(Annotation::new(
                             Some(config.0),
                             path.display().to_string(),
-                            entry.span(),
+                            entry.span().clone(),
                             "OnLoadMission should be a single sentence".to_string(),
                             Level::Warning,
                         ));
@@ -71,7 +71,7 @@ pub fn name_summary_author(dir: &Path, config: (&Processed, &Config)) -> Vec<Ann
                     messages.push(Annotation::new(
                         Some(config.0),
                         path.display().to_string(),
-                        entry.span(),
+                        entry.span().clone(),
                         "OnLoadMission is not a string".to_string(),
                         Level::Error,
                     ));
@@ -84,7 +84,7 @@ pub fn name_summary_author(dir: &Path, config: (&Processed, &Config)) -> Vec<Ann
                         messages.push(Annotation::new(
                             Some(config.0),
                             path.display().to_string(),
-                            entry.span(),
+                            entry.span().clone(),
                             "author is not set".to_string(),
                             Level::Error,
                         ));
@@ -93,7 +93,7 @@ pub fn name_summary_author(dir: &Path, config: (&Processed, &Config)) -> Vec<Ann
                     messages.push(Annotation::new(
                         Some(config.0),
                         path.display().to_string(),
-                        entry.span(),
+                        entry.span().clone(),
                         "author is not a string".to_string(),
                         Level::Error,
                     ));

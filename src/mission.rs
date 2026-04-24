@@ -12,13 +12,13 @@ use crate::{
     annotation::{Annotation, Level},
     checks::{
         objects::{
-            cup_parking::CUPParking, players::PlayerCheck, shops::ShopCheck,
-            spawners::SpawnersCheck, spectator::RequireSpectator, trigger::TriggerChecks,
-            zeus::ZeusModule,
+            cover_map::CoverMapCheck, cup_parking::CUPParking, hostiles::HostilesCheck,
+            players::PlayerCheck, shops::ShopCheck, spawners::SpawnersCheck,
+            spectator::RequireSpectator, trigger::TriggerChecks, zeus::ZeusModule,
         },
         run_checks, MissionCheck,
     },
-    get_number, versions,
+    get_class, get_number, versions,
 };
 
 pub fn check(dir: &PathBuf) -> Result<Vec<Annotation>, String> {
@@ -73,6 +73,12 @@ pub fn check(dir: &PathBuf) -> Result<Vec<Annotation>, String> {
                 Box::new(TriggerChecks::new()),
                 Box::new(CUPParking::new()),
                 Box::new(ZeusModule::new()),
+                Box::new(CoverMapCheck::new()),
+                Box::new(HostilesCheck::new(
+                    get_class(mission.config(), "Mission.Intel")
+                        .and_then(|intel| get_number(intel, "resistanceWest").map(|(v, _)| v))
+                        .unwrap_or(0),
+                )),
             ];
             // 0: Contract, 1: Sub-Contract, 2: Training, 3: Special
             global_checks.append(&mut match synixe_type {
@@ -98,6 +104,7 @@ pub fn check(dir: &PathBuf) -> Result<Vec<Annotation>, String> {
                 3 => vec![
                     Box::new(PlayerCheck::new(dir, false)),
                     Box::new(SpawnersCheck::new(false, version, false)),
+                    Box::new(TriggerChecks::new()),
                 ],
                 _ => {
                     messages.push(Annotation::new(
