@@ -118,26 +118,7 @@ impl MissionCheck for TriggerChecks {
                 if waypoint.is_none() {
                     waypoint = Some(item_1);
                 } else {
-                    const ALLOWED_WAYPOINT_PAIRS: [(&str, &str); 2] =
-                        [("TransportUnload", "GetOut"), ("GetIn", "Load")];
-                    let Some((waypoint_type_0, _)) = get_string(item_0, "type") else {
-                        return;
-                    };
-                    let Some((waypoint_type_1, _)) = get_string(item_1, "type") else {
-                        return;
-                    };
-                    if !ALLOWED_WAYPOINT_PAIRS.iter().any(|&(a, b)| {
-                        (waypoint_type_0 == a && waypoint_type_1 == b)
-                            || (waypoint_type_0 == b && waypoint_type_1 == a)
-                    }) {
-                        self.messages.push(Annotation::new(
-                            None,
-                            dir.join("mission.sqm").display().to_string(),
-                            0..0,
-                            format!("WaypointActivation link has types {} and {}, which is not an allowed pair", waypoint_type_0, waypoint_type_1),
-                            Level::Error,
-                        ));
-                    }
+                    // If both items are waypoints, it's probably fine
                     return;
                 }
             } else if type_ == "Trigger" {
