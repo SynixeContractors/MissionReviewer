@@ -1,5 +1,6 @@
 pub mod cover_map;
 pub mod cup_parking;
+pub mod debug_units;
 pub mod hostiles;
 pub mod players;
 pub mod shops;

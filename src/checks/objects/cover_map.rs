@@ -6,7 +6,7 @@ use hemtt_workspace::reporting::Processed;
 use crate::{
     annotation::{Annotation, Level},
     checks::MissionCheck,
-    extract_number, get_array, get_number, get_string,
+    class_span, extract_number, get_array, get_number, get_string,
 };
 
 pub struct CoverMapCheck {
@@ -36,6 +36,12 @@ impl CoverMapCheck {
     }
 }
 
+/// Eden stores sizes as floats, so allow for rounding (e.g. 500.00003)
+fn is_multiple_of_100(value: f32) -> bool {
+    let remainder = value.rem_euclid(100.0);
+    remainder < 0.01 || remainder > 99.99
+}
+
 impl Default for CoverMapCheck {
     fn default() -> Self {
         Self::new()
@@ -45,7 +51,7 @@ impl Default for CoverMapCheck {
 impl MissionCheck for CoverMapCheck {
     fn object(
         &mut self,
-        _: (&Processed, &Config),
+        mission: (&Processed, &Config),
         dir: &Path,
         class: &hemtt_config::Class,
         data_type: &str,
@@ -66,9 +72,9 @@ impl MissionCheck for CoverMapCheck {
         let is_rectangle = get_number(class, "areaIsRectangle").map_or(0, |(value, _)| value);
         if is_rectangle != 1 {
             self.messages.push(Annotation::new(
-                None,
+                Some(mission.0),
                 dir.join("mission.sqm").display().to_string(),
-                0..0,
+                class_span(class),
                 "Cover maps must be rectangles (set areaIsRectangle=1)".to_string(),
                 Level::Error,
             ));
@@ -77,11 +83,11 @@ impl MissionCheck for CoverMapCheck {
 
         // Check if width and length are multiples of 100
         if let Some((width, length)) = Self::get_area_size(class) {
-            if width % 100.0 != 0.0 || length % 100.0 != 0.0 {
+            if !is_multiple_of_100(width) || !is_multiple_of_100(length) {
                 self.messages.push(Annotation::new(
-                    None,
+                    Some(mission.0),
                     dir.join("mission.sqm").display().to_string(),
-                    0..0,
+                    class_span(class),
                     format!(
                         "Cover map dimensions must be a multiple of 100 (current: {:.2} × {:.2})",
                         width, length

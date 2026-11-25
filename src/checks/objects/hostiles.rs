@@ -5,7 +5,7 @@ use hemtt_workspace::reporting::Processed;
 
 use crate::{
     annotation::{Annotation, Level},
-    checks::{objects::hostiles, MissionCheck},
+    checks::MissionCheck,
     get_class, get_number, get_string,
 };
 
@@ -13,14 +13,16 @@ pub struct HostilesCheck {
     east: u32,
     independent: u32,
     independent_is_hostile: bool,
+    scripts_spawn_units: bool,
 }
 
 impl HostilesCheck {
-    pub fn new(resistance_west: i32) -> Self {
+    pub fn new(resistance_west: i32, scripts_spawn_units: bool) -> Self {
         Self {
             east: 0,
             independent: 0,
             independent_is_hostile: resistance_west == 0,
+            scripts_spawn_units,
         }
     }
 }
@@ -28,8 +30,8 @@ impl HostilesCheck {
 impl MissionCheck for HostilesCheck {
     fn object(
         &mut self,
-        mission: (&Processed, &Config),
-        dir: &Path,
+        _: (&Processed, &Config),
+        _: &Path,
         class: &hemtt_config::Class,
         data_type: &str,
     ) {
@@ -39,17 +41,17 @@ impl MissionCheck for HostilesCheck {
         let Some(attributes) = get_class(class, "Attributes") else {
             return;
         };
-        let is_player = get_number(&attributes, "isPlayer")
+        let is_player = get_number(attributes, "isPlayer")
             .map(|(value, _)| value)
             .unwrap_or(0);
-        let is_playable = get_number(&attributes, "isPlayable")
+        let is_playable = get_number(attributes, "isPlayable")
             .map(|(value, _)| value)
             .unwrap_or(0);
         if is_player == 1 || is_playable == 1 {
             return;
         }
 
-        let Some((side, side_range)) = get_string(class, "side") else {
+        let Some((side, _)) = get_string(class, "side") else {
             return;
         };
         if side == "East" {
@@ -68,15 +70,36 @@ impl MissionCheck for HostilesCheck {
                 0
             };
         if hostiles == 0 {
+            let (message, level) = if self.scripts_spawn_units {
+                (
+                    "No hostiles placed in the editor, assuming they are spawned by script",
+                    Level::Warning,
+                )
+            } else if self.independent > 0 {
+                // Zeus can change diplomacy during the mission
+                (
+                    "Independent units are friendly to West in the editor, fine if Zeus makes them hostile",
+                    Level::Warning,
+                )
+            } else {
+                ("No hostiles found in mission", Level::Error)
+            };
             messages.push(Annotation::new(
                 None,
                 dir.join("mission.sqm").display().to_string(),
                 0..0,
                 format!(
-                    "No hostiles found in mission (East: {}, Independent: {})",
-                    self.east, self.independent
+                    "{} (East: {}, Independent: {}{})",
+                    message,
+                    self.east,
+                    self.independent,
+                    if self.independent_is_hostile || self.independent == 0 {
+                        ""
+                    } else {
+                        ", friendly to West"
+                    }
                 ),
-                Level::Error,
+                level,
             ));
         }
         messages

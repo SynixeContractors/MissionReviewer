@@ -10,12 +10,12 @@ use crate::{
 };
 
 pub struct CUPParking {
-    seen: bool,
+    seen: Option<Annotation>,
 }
 
 impl CUPParking {
     pub fn new() -> Self {
-        Self { seen: false }
+        Self { seen: None }
     }
 }
 
@@ -28,36 +28,32 @@ impl Default for CUPParking {
 impl MissionCheck for CUPParking {
     fn object(
         &mut self,
-        _: (&Processed, &Config),
-        _: &Path,
+        mission: (&Processed, &Config),
+        dir: &Path,
         class: &hemtt_config::Class,
         data_type: &str,
     ) {
         if data_type != "Object" {
             return;
         }
-        if self.seen {
+        if self.seen.is_some() {
             return;
         }
-        let Some((class, _)) = get_string(class, "type") else {
+        let Some((class_type, class_type_span)) = get_string(class, "type") else {
             return;
         };
-        if class == "CUP_sign_parking" || class == "CUP_sign_parking_new" {
-            self.seen = true;
+        if class_type == "CUP_sign_parking" || class_type == "CUP_sign_parking_new" {
+            self.seen = Some(Annotation::new(
+                Some(mission.0),
+                dir.join("mission.sqm").display().to_string(),
+                class_type_span.clone(),
+                "Use the vanilla \"Parking Lot\" (RoadSign_Livonia_parking) sign, the CUP sign floats above the ground".to_string(),
+                Level::Error,
+            ));
         }
     }
 
-    fn done(&self, dir: &Path) -> Vec<Annotation> {
-        if self.seen {
-            vec![Annotation::new(
-                None,
-                dir.join("mission.sqm").display().to_string(),
-                0..0,
-                "Use the vanilla \"Parking Lot\" (RoadSign_Livonia_parking) sign, the CUP sign floats above the ground".to_string(),
-                Level::Error,
-            )]
-        } else {
-            vec![]
-        }
+    fn done(&self, _: &Path) -> Vec<Annotation> {
+        self.seen.iter().cloned().collect()
     }
 }

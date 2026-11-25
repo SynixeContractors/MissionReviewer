@@ -1,6 +1,9 @@
 pub mod annotation;
 pub mod checks;
+pub mod discover;
+pub mod maps;
 pub mod mission;
+pub mod report;
 pub mod versions;
 
 use std::ops::Range;
@@ -47,7 +50,7 @@ pub fn get_class<'a>(parent: &'a dyn GetChildren<'a>, path: &str) -> Option<&'a 
             .iter()
             .find(|c| {
                 if let Property::Class(class) = c {
-                    if class.name().unwrap().as_str() == name {
+                    if class.name().is_some_and(|n| n.as_str() == name) {
                         return true;
                     }
                 }
@@ -60,18 +63,17 @@ pub fn get_class<'a>(parent: &'a dyn GetChildren<'a>, path: &str) -> Option<&'a 
                 class
             })
     }
-    let mut ret = None;
-    let mut root: Box<&'a dyn GetChildren<'a>> = Box::new(parent);
-    for part in path.split('.') {
-        if let Some(class) = get_child(root.get_children(), part) {
-            root = Box::new(class);
-            ret = Some(class);
-        } else {
-            return None;
-        }
+    let mut parts = path.split('.');
+    let mut class = get_child(parent.get_children(), parts.next()?)?;
+    for part in parts {
+        class = get_child(class.get_children(), part)?;
     }
-    drop(root);
-    ret
+    Some(class)
+}
+
+/// The span of a class name, used to point annotations at a class in the file
+pub fn class_span(class: &Class) -> Range<usize> {
+    class.name().map(|n| n.span.clone()).unwrap_or(0..0)
 }
 
 pub fn get_number<'a>(parent: &'a dyn GetChildren<'a>, path: &str) -> Option<(i32, Range<usize>)> {

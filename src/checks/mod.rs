@@ -1,5 +1,6 @@
 pub mod description;
 pub mod objects;
+pub mod scripts;
 pub mod time;
 
 use std::path::Path;

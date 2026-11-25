@@ -24,16 +24,16 @@ jobs:
             exe: missionreviewer.exe
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
-          toolchain: stable
-          override: true
+          components: clippy
+      - name: Clippy
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Test
+        run: cargo test
       - name: Compile
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release
+        run: cargo build --release
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -59,7 +59,7 @@ jobs:
           path: release
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             release/*

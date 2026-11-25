@@ -80,29 +80,8 @@ impl Annotation {
                 title: String::new(),
             };
         };
-        let mut start_line = 1;
-        let mut start_column = 1;
-        let mut end_line = 1;
-        let mut end_column = 1;
-        let mut line_counter = 1;
-        let mut column_counter = 1;
-
-        for (i, c) in content.chars().enumerate() {
-            if i == start {
-                start_line = line_counter;
-                start_column = column_counter;
-            }
-            if i == end {
-                end_line = line_counter;
-                end_column = column_counter;
-            }
-            if c == '\n' {
-                line_counter += 1;
-                column_counter = 1;
-            } else {
-                column_counter += 1;
-            }
-        }
+        let (start_line, start_column) = line_column(&content, start);
+        let (end_line, end_column) = line_column(&content, end);
         Self {
             path,
             start_line,
@@ -117,6 +96,9 @@ impl Annotation {
 
     #[must_use]
     /// Generate a line for the CI annotation
+    ///
+    /// Fields are separated by `||`, so newlines and `||` inside fields are escaped
+    /// (`\\n` is turned back into a newline by the action).
     pub fn line(&self) -> String {
         format!(
             "{}||{}||{}||{}||{}||{}||{}||{}\n",
@@ -125,11 +107,31 @@ impl Annotation {
             self.start_column,
             self.end_column,
             self.level,
-            self.title,
-            self.message,
-            self.path,
+            escape(&self.title),
+            escape(&self.message),
+            escape(&self.path),
         )
     }
+}
+
+fn escape(field: &str) -> String {
+    field
+        .replace('\r', "")
+        .replace('\n', "\\n")
+        .replace("||", "|")
+}
+
+/// Convert a byte offset into a 1-based (line, column), column counted in characters
+fn line_column(content: &str, offset: usize) -> (usize, usize) {
+    let mut offset = offset.min(content.len());
+    while !content.is_char_boundary(offset) {
+        offset -= 1;
+    }
+    let before = &content[..offset];
+    let line = before.matches('\n').count() + 1;
+    let line_start = before.rfind('\n').map_or(0, |i| i + 1);
+    let column = before[line_start..].chars().count() + 1;
+    (line, column)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -150,5 +152,37 @@ impl Display for Level {
             Self::Warning => write!(f, "warning"),
             Self::Error => write!(f, "error"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn line_column_uses_byte_offsets() {
+        let content = "é\nab€c\n";
+        assert_eq!(line_column(content, 0), (1, 1));
+        assert_eq!(line_column(content, 3), (2, 1));
+        // byte 5 is the start of '€', which is the 3rd character on line 2
+        assert_eq!(line_column(content, 5), (2, 3));
+        // offset inside '€' snaps back to its start
+        assert_eq!(line_column(content, 6), (2, 3));
+        assert_eq!(line_column(content, 100), (3, 1));
+    }
+
+    #[test]
+    fn line_escapes_separators() {
+        let annotation = Annotation {
+            path: "a||b".to_string(),
+            start_line: 1,
+            end_line: 1,
+            start_column: 1,
+            end_column: 1,
+            level: Level::Error,
+            message: "one\r\ntwo".to_string(),
+            title: String::new(),
+        };
+        assert_eq!(annotation.line(), "1||1||1||1||error||||one\\ntwo||a|b\n");
     }
 }

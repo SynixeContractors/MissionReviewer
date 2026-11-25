@@ -17,8 +17,12 @@ pub fn time(
     static TIMES: OnceLock<HashMap<String, (i32, i32)>> = OnceLock::new();
     let times = TIMES.get_or_init(|| {
         let mut times = HashMap::new();
-        let times_path = Path::new("starts.txt");
-        if let Ok(lines) = std::fs::read_to_string(times_path) {
+        // In the working directory, or the missions repository the mission is in
+        let times_path = std::iter::once(Path::new(""))
+            .chain(dir.ancestors().skip(1))
+            .map(|d| d.join("starts.txt"))
+            .find(|p| p.is_file());
+        if let Some(lines) = times_path.and_then(|p| std::fs::read_to_string(p).ok()) {
             for line in lines.lines() {
                 // example: Altis|12:30
                 let mut parts = line.split('|');
@@ -43,7 +47,9 @@ pub fn time(
     let ext_path = dir.to_path_buf().join("edit_me").join("description.ext");
     let sqm_path = dir.to_path_buf().join("mission.sqm");
     let mut messages = Vec::new();
-    let Some((synixe_start_time, _)) = get_number(config.1, "synixe_start_time") else {
+    let Some((synixe_start_time, synixe_start_time_span)) =
+        get_number(config.1, "synixe_start_time")
+    else {
         messages.push(Annotation::new(
             Some(config.0),
             ext_path.display().to_string(),
@@ -57,7 +63,7 @@ pub fn time(
         messages.push(Annotation::new(
             Some(config.0),
             ext_path.display().to_string(),
-            0..0,
+            synixe_start_time_span,
             "synixe_start_time is not between 0 and 24".to_string(),
             Level::Error,
         ));
@@ -74,7 +80,7 @@ pub fn time(
         return messages;
     };
     let (mission_hour, mission_hour_span) =
-        if let Some((mission_hour, mission_hour_span)) = get_number(&mission_intel, "hour") {
+        if let Some((mission_hour, mission_hour_span)) = get_number(mission_intel, "hour") {
             (mission_hour, mission_hour_span)
         } else {
             let Some(map) = dir.extension().and_then(|ext| ext.to_str()) else {
@@ -109,34 +115,36 @@ pub fn time(
         ));
     }
 
-    let (mission_minutes, mission_minutes_span) =
-        if let Some((mission_minutes, mission_minutes_span)) = get_number(&mission_intel, "minute")
-        {
-            (mission_minutes, mission_minutes_span)
-        } else {
-            let Some(map) = dir.extension().and_then(|ext| ext.to_str()) else {
-                messages.push(Annotation::new(
-                    Some(mission.0),
-                    sqm_path.display().to_string(),
-                    0..0,
-                    "Mission filename does not contain a map name".to_string(),
-                    Level::Error,
-                ));
-                return messages;
-            };
-            let Some((mission_minutes, _)) = times.get(&map.to_lowercase()) else {
-                println!("Missing time for map {} in starts.txt", map);
-                messages.push(Annotation::new(
-                    Some(mission.0),
-                    sqm_path.display().to_string(),
-                    0..0,
-                    "Mission >> Intel >> minutes is missing".to_string(),
-                    Level::Error,
-                ));
-                return messages;
-            };
-            (*mission_minutes, 0..0)
+    let (mission_minutes, mission_minutes_span) = if let Some((
+        mission_minutes,
+        mission_minutes_span,
+    )) = get_number(mission_intel, "minute")
+    {
+        (mission_minutes, mission_minutes_span)
+    } else {
+        let Some(map) = dir.extension().and_then(|ext| ext.to_str()) else {
+            messages.push(Annotation::new(
+                Some(mission.0),
+                sqm_path.display().to_string(),
+                0..0,
+                "Mission filename does not contain a map name".to_string(),
+                Level::Error,
+            ));
+            return messages;
         };
+        let Some((_, mission_minutes)) = times.get(&map.to_lowercase()) else {
+            println!("Missing time for map {} in starts.txt", map);
+            messages.push(Annotation::new(
+                Some(mission.0),
+                sqm_path.display().to_string(),
+                0..0,
+                "Mission >> Intel >> minute is missing".to_string(),
+                Level::Error,
+            ));
+            return messages;
+        };
+        (*mission_minutes, 0..0)
+    };
 
     if mission_minutes != 0 {
         messages.push(Annotation::new(

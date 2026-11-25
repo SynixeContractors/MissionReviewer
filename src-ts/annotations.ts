@@ -11,6 +11,11 @@ interface Annotation {
   path: string;
 }
 
+// The reviewer escapes newlines in fields as a literal `\n`
+function unescapeField(field: string | undefined): string {
+  return (field ?? '').replace(/\\n/g, '\n');
+}
+
 export function parseAnnotation(line: string): Annotation {
   const parts = line.split('||');
   return {
@@ -19,9 +24,9 @@ export function parseAnnotation(line: string): Annotation {
     start_column: parseInt(parts[2]),
     end_column: parseInt(parts[3]),
     level: parts[4],
-    title: parts[5],
-    message: parts[6],
-    path: parts[7]
+    title: unescapeField(parts[5]),
+    message: unescapeField(parts[6]),
+    path: unescapeField(parts[7])
   };
 }
 

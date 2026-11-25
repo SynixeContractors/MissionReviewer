@@ -26,6 +26,7 @@ impl ShopCheck {
 
     fn check_attribute<'a>(
         &mut self,
+        processed: &Processed,
         dir: &Path,
         attributes: &'a dyn GetChildren<'a>,
         property: &str,
@@ -34,7 +35,7 @@ impl ShopCheck {
         if let Some((value, span)) = get_number(attributes, property) {
             if value == 1 {
                 self.messages.push(Annotation::new(
-                    None,
+                    Some(processed),
                     dir.join("mission.sqm").display().to_string(),
                     span,
                     message,
@@ -54,7 +55,7 @@ impl Default for ShopCheck {
 impl MissionCheck for ShopCheck {
     fn object(
         &mut self,
-        _: (&Processed, &Config),
+        mission: (&Processed, &Config),
         dir: &Path,
         class: &hemtt_config::Class,
         data_type: &str,
@@ -72,12 +73,7 @@ impl MissionCheck for ShopCheck {
             if property == "crate_client_gear_attribute_shop" {
                 if let Some(attributes) = get_class(class, "Attributes") {
                     self.check_attribute(
-                        dir,
-                        &attributes,
-                        "createAsSimpleObject",
-                        "shops must not be simple objects".to_string(),
-                    );
-                    self.check_attribute(
+                        mission.0,
                         dir,
                         &attributes,
                         "createAsSimpleObject",
